@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -54,11 +53,15 @@ func main() {
 	gc := NewClient()
 	ctx := context.Background()
 
-	user, err := gc.User.Get(ctx, "haadi-coder")
-	// user, err := gc.User.GetAuthenticated(ctx)
+	// user, _ := gc.User.Get(ctx, "haadi-coder")
+	user, err := gc.User.GetAuthenticated(ctx)
+	// user, err := gc.User.UpdateAuthenticated(ctx, UserRequest{
+	// 	Company: "Addcode",
+	// })
+	// users, _, _ := gc.User.ListAuthenticatedUserFollowings(ctx, &ListOptions{Page: 1, PerPage: 10})
 
-	// fmt.Printf("ID: %d\nLogin: %s\nName: %s\n", user.Id, user.Login, user.Name)
 	fmt.Print(user, err)
+	// fmt.Printf("ID: %d\nLogin: %s\nName: %s\n", user.Id, user.Login, user.Name)
 
 }
 
@@ -117,6 +120,7 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 
 type Response struct {
 	*http.Response
+	*RateLimit
 
 	PreviousPage int
 	NextPage     int
@@ -140,23 +144,13 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("API Error: %d - %s\n", e.StatusCode, e.Message)
 }
 
-type ListOptions struct {
-	Page    int
-	PerPage int
-}
-
-type RateLimit struct {
-	Limit     int
-	Remaining int
-	Reset     int64
-}
-
 func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 	if c.requestHook != nil {
 		c.requestHook(req)
 	}
 
 	var res *http.Response
+	var rateLim *RateLimit
 	var err error
 
 	maxAtm := max(c.retryMax, 1)
@@ -176,19 +170,18 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 		if c.responseHook != nil {
 			c.responseHook(res)
 		}
-
-		rateLim := getRateLimit(res)
-		fmt.Print(rateLim)
+		rateLim = getRateLimit(res)
+		// fmt.Print(rateLim)
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			_ = res.Body.Close()
 
 			if !c.rateLimitRetry {
-				return buildResponse(res), buildErrorResponse(res)
+				return buildResponse(res, rateLim), buildErrorResponse(res)
 			}
 
 			if c.rateLimitHandler != nil {
 				if err := c.rateLimitHandler(res); err != nil {
-					return buildResponse(res), err
+					return buildResponse(res, rateLim), err
 				}
 				continue
 			}
@@ -212,7 +205,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 		break
 	}
 
-	response := buildResponse(res)
+	response := buildResponse(res, rateLim)
 
 	if res.StatusCode >= 400 {
 		_ = res.Body.Close()
@@ -222,53 +215,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 	return response, nil
 }
 
-func (c *Client) calculateBackoff(attempt int) time.Duration {
-	if c.retryWaitMin == 0 {
-		c.retryWaitMin = 5
-	}
-	if c.retryWaitMax == 0 {
-		c.retryWaitMax = 60
-	}
-
-	wait := c.retryWaitMin * math.Pow(2, float64(attempt))
-	if wait > c.retryWaitMax {
-		wait = c.retryWaitMax
-	}
-
-	return time.Duration(wait * float64(time.Second))
-}
-
-func getRateLimit(res *http.Response) *RateLimit {
-	rl := RateLimit{}
-
-	if lim := res.Header.Get(rateLimitHeader); lim != "" {
-		if intL, err := strconv.Atoi(lim); err == nil {
-			rl.Limit = intL
-		}
-	}
-
-	if rem := res.Header.Get(rateRemainigHeader); rem != "" {
-		if intRm, err := strconv.Atoi(rem); err == nil {
-			rl.Remaining = intRm
-		}
-	}
-
-	if res := res.Header.Get(rateResetHeader); res != "" {
-		if intRes, err := strconv.ParseInt(res, 10, 64); err == nil {
-			rl.Reset = intRes
-		}
-	}
-
-	return &rl
-}
-
-func buildResponse(hr *http.Response) *Response {
+func buildResponse(hr *http.Response, rl *RateLimit) *Response {
 	if hr == nil {
 		return &Response{}
 	}
 
 	res := &Response{
-		Response: hr,
+		Response:  hr,
+		RateLimit: rl,
 	}
 
 	if l := hr.Header.Get("Link"); l != "" {
@@ -341,4 +295,23 @@ func parseLinkHeader(res *Response, link string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) fetch(ctx context.Context, req *http.Request, v any) (*Response, error) {
+	res, err := c.Do(ctx, req)
+	if err != nil {
+		return res, err
+	}
+
+	if v != nil {
+		if err := json.NewDecoder(res.Body).Decode(v); err != nil {
+			return res, err
+		}
+	}
+
+	if err := res.Body.Close(); err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
