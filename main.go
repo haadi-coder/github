@@ -53,15 +53,15 @@ func main() {
 	gc := NewClient()
 	ctx := context.Background()
 
-	// user, _ := gc.User.Get(ctx, "haadi-coder")
-	user, err := gc.User.GetAuthenticated(ctx)
-	// user, err := gc.User.UpdateAuthenticated(ctx, UserRequest{
-	// 	Company: "Addcode",
+	user, _ := gc.User.Get(ctx, "haadi-coder")
+	// user, err := gc.User.GetAuthenticated(ctx)
+	// user, _ := gc.User.UpdateAuthenticated(ctx, UserRequest{
+	// 	Company: "Blah",
 	// })
-	// users, _, _ := gc.User.ListAuthenticatedUserFollowings(ctx, &ListOptions{Page: 1, PerPage: 10})
+	// users, _, _ := gc.User.ListAuthenticatedUserFollowers(ctx, &ListOptions{Page: 1, PerPage: 2})
 
-	fmt.Print(user, err)
-	// fmt.Printf("ID: %d\nLogin: %s\nName: %s\n", user.Id, user.Login, user.Name)
+	// fmt.Print(user, err)
+	fmt.Printf("ID: %d\nLogin: %s\nName: %s\nCompany: %s\n", user.Id, user.Login, user.Name, user.Company)
 
 }
 
