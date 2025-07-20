@@ -60,7 +60,6 @@ func main() {
 	// })
 	// users, _, _ := gc.User.ListAuthenticatedUserFollowers(ctx, &ListOptions{Page: 1, PerPage: 2})
 
-	// fmt.Print(user, err)
 	fmt.Printf("ID: %d\nLogin: %s\nName: %s\nCompany: %s\n", user.Id, user.Login, user.Name, user.Company)
 
 }

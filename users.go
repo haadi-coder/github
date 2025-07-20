@@ -11,24 +11,24 @@ type UsersService struct {
 }
 
 type User struct {
-	Id          int64  `json:"id"`
-	Login       string `json:"login"`
-	NodeID      string `json:"node_id"`
-	AvatarURL   string `json:"avatar_url"`
-	URL         string `json:"url"`
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	Company     string `json:"company"`
-	Blog        string `json:"blog"`
-	Location    string `json:"location"`
-	Email       string `json:"email"`
-	Hireable    bool   `json:"hireable"`
-	Bio         string `json:"bio"`
-	PublicRepos int    `json:"public_repos"`
-	Followers   int    `json:"followers"`
-	Following   int    `json:"following"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	Id          int64      `json:"id"`
+	Login       string     `json:"login"`
+	NodeID      string     `json:"node_id"`
+	AvatarURL   string     `json:"avatar_url"`
+	URL         string     `json:"url"`
+	Type        string     `json:"type"`
+	Name        string     `json:"name"`
+	Company     string     `json:"company"`
+	Blog        string     `json:"blog"`
+	Location    string     `json:"location"`
+	Email       string     `json:"email"`
+	Hireable    bool       `json:"hireable"`
+	Bio         string     `json:"bio"`
+	PublicRepos int        `json:"public_repos"`
+	Followers   int        `json:"followers"`
+	Following   int        `json:"following"`
+	CreatedAt   *Timestamp `json:"created_at"`
+	UpdatedAt   *Timestamp `json:"updated_at"`
 }
 
 type UserRequest struct {
