@@ -27,7 +27,8 @@ type Client struct {
 	responseHook     func(*http.Response)
 	rateLimitHandler func(*http.Response) error
 
-	User UsersService
+	User         UsersService
+	Repositories RepositoriesService
 }
 
 const (
@@ -53,15 +54,15 @@ func main() {
 	gc := NewClient()
 	ctx := context.Background()
 
-	user, _ := gc.User.Get(ctx, "haadi-coder")
-	// user, err := gc.User.GetAuthenticated(ctx)
-	// user, _ := gc.User.UpdateAuthenticated(ctx, UserRequest{
-	// 	Company: "Blah",
-	// })
-	// users, _, _ := gc.User.ListAuthenticatedUserFollowers(ctx, &ListOptions{Page: 1, PerPage: 2})
+	// repo, err := gc.Repositories.Get(ctx, "haadi-coder", "color")
+	repos, _, err := gc.Repositories.List(ctx, "haadi-coder", &RepositoryListOptions{ListOptions: &ListOptions{Page: 2, PerPage: 10}})
 
-	fmt.Printf("ID: %d\nLogin: %s\nName: %s\nCompany: %s\n", user.Id, user.Login, user.Name, user.Company)
+	for _, repo := range repos {
+		fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
+	}
 
+	// fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
+	fmt.Print(err)
 }
 
 func NewClient(opts ...option) *Client {
@@ -76,6 +77,7 @@ func NewClient(opts ...option) *Client {
 	}
 
 	client.User = UsersService{client: client}
+	client.Repositories = RepositoriesService{client: client}
 
 	for _, opt := range opts {
 		opt(client)
@@ -169,8 +171,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 		if c.responseHook != nil {
 			c.responseHook(res)
 		}
+
 		rateLim = getRateLimit(res)
-		// fmt.Print(rateLim)
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			_ = res.Body.Close()
 

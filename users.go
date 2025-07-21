@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type UsersService struct {
@@ -43,7 +44,7 @@ type UserRequest struct {
 }
 
 type UsersListOptions struct {
-	Since int `json:"since,omitempty"`
+	Since int
 	ListOptions
 }
 
@@ -163,8 +164,12 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 }
 
 func (s *UsersService) Follow(ctx context.Context, username string) error {
-	path := "user/follower/" + username
-	req, err := s.client.NewRequest("DELETE", path, nil)
+	path, err := url.JoinPath("user/following", username)
+	if err != nil {
+		return err
+	}
+
+	req, err := s.client.NewRequest(http.MethodPut, path, nil)
 	if err != nil {
 		return err
 	}
@@ -178,8 +183,12 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 }
 
 func (s *UsersService) Unfollow(ctx context.Context, username string) error {
-	path := "user/following/" + username
-	req, err := s.client.NewRequest("DELETE", path, nil)
+	path, err := url.JoinPath("user/following", username)
+	if err != nil {
+		return err
+	}
+
+	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
 		return err
 	}
