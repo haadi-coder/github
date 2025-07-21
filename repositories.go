@@ -18,23 +18,28 @@ type Repository struct {
 }
 
 type RepositoryRequest struct {
-	Name                string `json:"name"`
-	Description         string `json:"description"`
-	Private             bool   `json:"private"`
-	Visibility          string `json:"visibility"`
-	HasIssues           bool   `json:"has_issues"`
-	HasWiki             bool   `json:"has_wiki"`
-	IsTemplate          bool   `json:"is_template"`
-	DefaultBranch       string `json:"default_branch"`
-	AllowSquashMerge    bool   `json:"allow_squash_merge"`
-	AllowMergeCommit    bool   `json:"allow_merge_commit"`
-	AllowRebaseMerge    bool   `json:"allow_rebase_merge"`
-	AllowAutoMerge      bool   `json:"allow_auto_merge"`
-	DeleteBranchOnMerge bool   `json:"delete_branch_on_merge"`
-	MergeCommitTitle    string `json:"merge_commit_title"`
-	MergeCommitMessage  string `json:"merge_commit_message"`
-	Archived            bool   `json:"archived"`
-	AllowForking        bool   `json:"allow_forking"`
+	Name                     string `json:"name,omitempty"`
+	Description              string `json:"description,omitempty"`
+	Homepage                 string `json:"homepage,omitempty"`
+	Private                  bool   `json:"private,omitempty"`
+	Visibility               string `json:"visibility,omitempty"`
+	HasIssues                bool   `json:"has_issues,omitempty"`
+	HasProjects              bool   `json:"has_projects,omitempty"`
+	HasWiki                  bool   `json:"has_wiki,omitempty"`
+	IsTemplate               bool   `json:"is_template,omitempty"`
+	DefaultBranch            string `json:"default_branch,omitempty"`
+	AllowSquashMerge         bool   `json:"allow_squash_merge,omitempty"`
+	AllowMergeCommit         bool   `json:"allow_merge_commit,omitempty"`
+	AllowRebaseMerge         bool   `json:"allow_rebase_merge,omitempty"`
+	AllowAutoMerge           bool   `json:"allow_auto_merge,omitempty"`
+	AllowhMergeCommitMessage string `json:"squash_merge_commit_message,omitempty"`
+	DeletUpdateMerge         bool   `json:"allow_update_branch,omitempty"`
+	SquaseBranchOnMerge      bool   `json:"delete_branch_on_merge,omitempty"`
+	MergeCommitTitle         string `json:"merge_commit_title,omitempty"`
+	MergeCommitMessage       string `json:"merge_commit_message,omitempty"`
+	Archived                 bool   `json:"archived,omitempty"`
+	AllowForking             bool   `json:"allow_forking,omitempty"`
+	AutoInit                 bool   `josn:"auto_init,omitempty"`
 }
 
 type RepositoryListOptions struct {
@@ -42,6 +47,7 @@ type RepositoryListOptions struct {
 	Type      string
 	Sort      string
 	Direction string
+	Anon      string
 }
 
 func (s *RepositoriesService) Get(ctx context.Context, owner string, repoName string) (*Repository, error) {
@@ -103,6 +109,22 @@ func (s *RepositoriesService) Delete(ctx context.Context, owner string, repoName
 	return nil
 }
 
+func (s *RepositoriesService) Create(ctx context.Context, body RepositoryRequest) (*Repository, error) {
+	path := "user/repos"
+	req, err := s.client.NewRequest(http.MethodPost, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := new(Repository)
+	_, err = s.client.fetch(ctx, req, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
 func (s *RepositoriesService) List(ctx context.Context, owner string, opts *RepositoryListOptions) ([]*Repository, *Response, error) {
 	path, err := url.JoinPath("users", owner, "repos")
 	if err != nil {
@@ -138,4 +160,35 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 	}
 
 	return *repos, res, nil
+}
+
+func (s *RepositoriesService) ListContributors(ctx context.Context, owner string, repoName string, opts *RepositoryListOptions) ([]*User, *Response, error) {
+	path, err := url.JoinPath("repos", owner, repoName, "contributors")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if opts != nil {
+		q := req.URL.Query()
+		opts.paginateQuery(q)
+
+		if opts.Anon != "" {
+			q.Set("anon", opts.Anon)
+		}
+
+		req.URL.RawQuery = q.Encode()
+	}
+
+	contributors := new([]*User)
+	res, err := s.client.fetch(ctx, req, contributors)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return *contributors, res, nil
 }
