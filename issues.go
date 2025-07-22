@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -31,14 +30,26 @@ type Issue struct {
 	ClosedBy      *User      `json:"closed_by"`
 }
 
-type IssueRequest struct {
+type IssueCreateRequest struct {
+	Title     string   `json:"title"`
+	Body      string   `json:"body,omitempty"`
+	Assignee  string   `json:"assignee,omitempty"`
+	Milestone string   `json:"milestone,omitempty"`
+	Labels    []string `json:"labels,omitempty"`
+	Assignees []string `json:"assignees,omitempty"`
+	Type      string   `json:"type,omitempty"`
+}
+
+type IssueUpdateRequest struct {
 	Title       string   `json:"title"`
 	Body        string   `json:"body,omitempty"`
 	Assignee    string   `json:"assignee,omitempty"`
 	State       string   `json:"state"`
 	StateReason string   `json:"state_reason"`
+	Milestone   string   `json:"milestone,omitempty"`
 	Labels      []string `json:"labels,omitempty"`
 	Assignees   []string `json:"assignees,omitempty"`
+	Type        string   `json:"type,omitempty"`
 }
 
 type IssueListOptions struct {
@@ -55,18 +66,53 @@ type IssueListOptions struct {
 }
 
 func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, issueNum int) (*Issue, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	return fetchIssue[Issue](ctx, s.client, http.MethodGet, path, nil)
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
+	req, err := s.client.NewRequest(http.MethodGet, url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	issue := new(Issue)
+	_, err = s.client.Do(ctx, req, issue)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return issue, nil
 }
 
-func (s *IssuesService) Create(ctx context.Context, owner string, repoName string, body *IssueRequest) (*Issue, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues")
-	return fetchIssue[Issue](ctx, s.client, http.MethodPost, path, body)
+func (s *IssuesService) Create(ctx context.Context, owner string, repoName string, body *IssueCreateRequest) (*Issue, error) {
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues")
+	req, err := s.client.NewRequest(http.MethodPost, url.String(), body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	issue := new(Issue)
+	_, err = s.client.Do(ctx, req, issue)
+	if err != nil {
+		return nil, err
+	}
+
+	return issue, nil
 }
 
-func (s *IssuesService) Edit(ctx context.Context, owner string, repoName string, issueNum int, body *IssueRequest) (*Issue, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	return fetchIssue[Issue](ctx, s.client, http.MethodPatch, path, body)
+func (s *IssuesService) Edit(ctx context.Context, owner string, repoName string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
+	req, err := s.client.NewRequest(http.MethodPatch, url.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	issue := new(Issue)
+	_, err = s.client.Do(ctx, req, issue)
+	if err != nil {
+		return nil, err
+	}
+
+	return issue, nil
 }
 
 type IssueLockRequest struct {
@@ -74,13 +120,13 @@ type IssueLockRequest struct {
 }
 
 func (s *IssuesService) Lock(ctx context.Context, owner string, repoName string, issueNum int, body *IssueLockRequest) error {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
-	req, err := s.client.NewRequest(http.MethodPut, path, body)
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
+	req, err := s.client.NewRequest(http.MethodPut, url.String(), body)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.client.fetch(ctx, req, nil)
+	_, err = s.client.Do(ctx, req, nil)
 	if err != nil {
 		return err
 	}
@@ -89,13 +135,13 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repoName string,
 }
 
 func (s *IssuesService) Unlock(ctx context.Context, owner string, repoName string, issueNum int) error {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
-	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
+	req, err := s.client.NewRequest(http.MethodDelete, url.String(), nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.client.fetch(ctx, req, nil)
+	_, err = s.client.Do(ctx, req, nil)
 	if err != nil {
 		return err
 	}
@@ -104,14 +150,10 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repoName strin
 }
 
 func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName string, opts *IssueListOptions) ([]*Issue, *Response, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues")
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
+	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues")
 
 	if opts != nil {
-		q := req.URL.Query()
+		q := rawUrl.Query()
 		opts.paginateQuery(q)
 
 		if opts.Assignee != "" {
@@ -143,11 +185,17 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName s
 			q.Set("direction", opts.Direction)
 		}
 
-		req.URL.RawQuery = q.Encode()
+		rawUrl.RawQuery = q.Encode()
+	}
+
+	url := rawUrl.String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	issues := new([]*Issue)
-	res, err := s.client.fetch(ctx, req, issues)
+	res, err := s.client.Do(ctx, req, issues)
 	if err != nil {
 		return nil, res, err
 	}
@@ -177,19 +225,26 @@ type IssueCommentListOptions struct {
 }
 
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repoName string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "comments")
-	return fetchIssue[IssueComment](ctx, s.client, http.MethodPost, path, body)
+	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "comments")
+	req, err := s.client.NewRequest(http.MethodPost, url.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	comment := new(IssueComment)
+	_, err = s.client.Do(ctx, req, comment)
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, nil
 }
 
 func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repoName string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
-	path, _ := url.JoinPath("repos", owner, repoName, "issues/comments")
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
+	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues/comments")
 
 	if opts != nil {
-		q := req.URL.Query()
+		q := rawUrl.Query()
 		opts.paginateQuery(q)
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
@@ -202,29 +257,20 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 			q.Set("direction", opts.Direction)
 		}
 
-		req.URL.RawQuery = q.Encode()
+		rawUrl.RawQuery = q.Encode()
+	}
+
+	url := rawUrl.String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	comments := new([]*IssueComment)
-	res, err := s.client.fetch(ctx, req, comments)
+	res, err := s.client.Do(ctx, req, comments)
 	if err != nil {
 		return nil, res, err
 	}
 
 	return *comments, res, nil
-}
-
-func fetchIssue[Res Issue | IssueComment](ctx context.Context, client *Client, method string, path string, body any) (*Res, error) {
-	req, err := client.NewRequest(method, path, body)
-	if err != nil {
-		return nil, err
-	}
-
-	result := new(Res)
-	_, err = client.fetch(ctx, req, result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

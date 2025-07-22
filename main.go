@@ -55,14 +55,11 @@ func main() {
 	gc := NewClient()
 	ctx := context.Background()
 
-	issue, err := gc.Issues.CreateComment(ctx, "haadi-coder", "Test2", 1, IssueCommentRequest{Body: "99999999999999999999999"})
+	// issues, _, err := gc.Issues.ListByRepo(ctx, "haadi-coder", "Test2", &IssueListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 1}})
 
-	// for _, issue := range issues {
-	// 	fmt.Println(issue.Body)
+	user, err := gc.User.Get(ctx, "haadi-coder")
 
-	// }
-
-	fmt.Print(issue, err)
+	fmt.Print(user, err)
 
 	// fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
 }
@@ -89,9 +86,7 @@ func NewClient(opts ...option) *Client {
 	return client
 }
 
-func (c *Client) NewRequest(method, path string, body any) (*http.Request, error) {
-	url := c.baseUrl.JoinPath(path)
-
+func (c *Client) NewRequest(method, url string, body any) (*http.Request, error) {
 	var payload io.ReadWriter
 	if body != nil {
 		payload = &bytes.Buffer{}
@@ -102,7 +97,7 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 		}
 	}
 
-	req, err := http.NewRequest(method, url.String(), payload)
+	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +143,7 @@ func (e *ErrorResponse) Error() string {
 	return fmt.Sprintf("API Error: %d - %s\n", e.StatusCode, e.Message)
 }
 
-func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
+func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	if c.requestHook != nil {
 		c.requestHook(req)
 	}
@@ -211,8 +206,17 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*Response, error) {
 
 	response := buildResponse(res, rateLim)
 
+	if v != nil {
+		if err := json.NewDecoder(res.Body).Decode(v); err != nil {
+			return response, err
+		}
+	}
+
+	if err := res.Body.Close(); err != nil {
+		return response, err
+	}
+
 	if res.StatusCode >= 400 {
-		_ = res.Body.Close()
 		return response, buildErrorResponse(res)
 	}
 
@@ -299,23 +303,4 @@ func parseLinkHeader(res *Response, link string) error {
 	}
 
 	return nil
-}
-
-func (c *Client) fetch(ctx context.Context, req *http.Request, v any) (*Response, error) {
-	res, err := c.Do(ctx, req)
-	if err != nil {
-		return res, err
-	}
-
-	if v != nil {
-		if err := json.NewDecoder(res.Body).Decode(v); err != nil {
-			return res, err
-		}
-	}
-
-	if err := res.Body.Close(); err != nil {
-		return res, err
-	}
-
-	return res, nil
 }

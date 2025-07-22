@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 )
 
 type UsersService struct {
@@ -32,7 +31,7 @@ type User struct {
 	UpdatedAt   *Timestamp `json:"updated_at"`
 }
 
-type UserRequest struct {
+type UserUpdateRequest struct {
 	Name            string `json:"name"`
 	Email           string `json:"email"`
 	Blog            string `json:"blog"`
@@ -42,21 +41,20 @@ type UserRequest struct {
 	Hireable        bool   `json:"hireable"`
 	Bio             string `json:"bio"`
 }
-
 type UsersListOptions struct {
 	Since int
 	ListOptions
 }
 
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
-	path := "users/" + username
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	url := s.client.baseUrl.JoinPath("users/", username).String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.fetch(ctx, req, user); err != nil {
+	if _, err := s.client.Do(ctx, req, user); err != nil {
 		return nil, err
 	}
 
@@ -64,14 +62,14 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, error) 
 }
 
 func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
-	path := "user"
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	url := s.client.baseUrl.JoinPath("user").String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.fetch(ctx, req, user); err != nil {
+	if _, err := s.client.Do(ctx, req, user); err != nil {
 		return nil, err
 	}
 
@@ -79,24 +77,26 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 }
 
 func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*User, *Response, error) {
-	path := "users"
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
+	rawUrl := s.client.baseUrl.JoinPath("users")
 
 	if opts != nil {
-		q := req.URL.Query()
+		q := rawUrl.Query()
 		opts.paginateQuery(q)
 		if opts.Since != 0 {
 			q.Set("since", fmt.Sprintf("%d", opts.Since))
 		}
 
-		req.URL.RawQuery = q.Encode()
+		rawUrl.RawQuery = q.Encode()
+	}
+
+	url := rawUrl.String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	users := new([]*User)
-	res, err := s.client.fetch(ctx, req, users)
+	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err
 	}
@@ -104,15 +104,15 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	return *users, res, nil
 }
 
-func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserRequest) (*User, error) {
-	path := "user"
-	req, err := s.client.NewRequest(http.MethodPatch, path, body)
+func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
+	url := s.client.baseUrl.JoinPath("user").String()
+	req, err := s.client.NewRequest(http.MethodPatch, url, body)
 	if err != nil {
 		return nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.fetch(ctx, req, user); err != nil {
+	if _, err := s.client.Do(ctx, req, user); err != nil {
 		return nil, err
 	}
 
@@ -120,20 +120,22 @@ func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserRequest
 }
 
 func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
-	path := "user/followers"
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	rawUrl := s.client.baseUrl.JoinPath("user", "followers")
+
+	if opts != nil {
+		q := rawUrl.Query()
+		opts.paginateQuery(q)
+		rawUrl.RawQuery = q.Encode()
+	}
+
+	url := rawUrl.String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if opts != nil {
-		q := req.URL.Query()
-		opts.paginateQuery(q)
-		req.URL.RawQuery = q.Encode()
-	}
-
 	users := new([]*User)
-	res, err := s.client.fetch(ctx, req, users)
+	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err
 	}
@@ -142,20 +144,22 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 }
 
 func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
-	path := "user/following"
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	rawUrl := s.client.baseUrl.JoinPath("user/following")
+
+	if opts != nil {
+		q := rawUrl.Query()
+		opts.paginateQuery(q)
+		rawUrl.RawQuery = q.Encode()
+	}
+
+	url := rawUrl.String()
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if opts != nil {
-		q := req.URL.Query()
-		opts.paginateQuery(q)
-		req.URL.RawQuery = q.Encode()
-	}
-
 	users := new([]*User)
-	res, err := s.client.fetch(ctx, req, users)
+	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err
 	}
@@ -164,17 +168,13 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 }
 
 func (s *UsersService) Follow(ctx context.Context, username string) error {
-	path, err := url.JoinPath("user/following", username)
+	url := s.client.baseUrl.JoinPath("user", "following", username).String()
+	req, err := s.client.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
 	}
 
-	req, err := s.client.NewRequest(http.MethodPut, path, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.client.fetch(ctx, req, nil)
+	_, err = s.client.Do(ctx, req, nil)
 	if err != nil {
 		return err
 	}
@@ -183,17 +183,13 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 }
 
 func (s *UsersService) Unfollow(ctx context.Context, username string) error {
-	path, err := url.JoinPath("user/following", username)
+	url := s.client.baseUrl.JoinPath("user", "following", username).String()
+	req, err := s.client.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.client.fetch(ctx, req, nil)
+	_, err = s.client.Do(ctx, req, nil)
 	if err != nil {
 		return err
 	}
