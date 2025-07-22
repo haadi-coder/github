@@ -31,6 +31,7 @@ type Client struct {
 	Repositories *RepositoriesService
 	Issues       *IssuesService
 	PullRequests *PullRequestsService
+	Search       *SearchService
 }
 
 const (
@@ -53,12 +54,27 @@ const (
 )
 
 func main() {
+	gc := NewClient()
+	ctx := context.Background()
 
-	// issues, _, err := gc.Issues.ListByRepo(ctx, "haadi-coder", "Test2", &IssueListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 1}})
+	// paramValue := "GitHub Octocat in:readme user:defunkt"
 
-	// fmt.Print(prs, err)
+	// Encode the string using url.QueryEscape()
+	// encodedValue := url.QueryEscape(paramValue)
 
-	// fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
+	res, _ := gc.Search.Repositories(ctx, "language:go stars:>1000", &SearchOptions{
+		Sort:  "stars",
+		Order: "desc",
+		ListOptions: &ListOptions{
+			Page:    1,
+			PerPage: 10,
+		},
+	})
+
+	for _, repo := range res.Items {
+		fmt.Println(repo.Fullname, repo.Owner.Login)
+	}
+
 }
 
 func NewClient(opts ...option) *Client {
@@ -76,6 +92,7 @@ func NewClient(opts ...option) *Client {
 	client.Repositories = &RepositoriesService{client}
 	client.Issues = &IssuesService{client}
 	client.PullRequests = &PullRequestsService{client}
+	client.Search = &SearchService{client}
 
 	for _, opt := range opts {
 		opt(client)

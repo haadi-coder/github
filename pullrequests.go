@@ -19,6 +19,7 @@ type PullRequest struct {
 	State              string      `json:"state"`
 	Locked             bool        `json:"locked"`
 	ActiveLockReason   string      `json:"active_lock_reason"`
+	Labels             []*Label    `json:"labels"`
 	CreatedAt          *Timestamp  `json:"created_at"`
 	UpdatedAt          *Timestamp  `json:"updated_at"`
 	ClosedAt           *Timestamp  `json:"closed_at"`

@@ -19,6 +19,7 @@ type Issue struct {
 	State         string     `json:"state"`
 	Title         string     `json:"title"`
 	Body          string     `json:"body"`
+	Labels        []*Label   `json:"labels"`
 	User          *User      `json:"user"`
 	Assignee      *User      `json:"assignee"`
 	Assignees     []*User    `json:"assignees"`
@@ -35,7 +36,7 @@ type IssueCreateRequest struct {
 	Body      string   `json:"body,omitempty"`
 	Assignee  string   `json:"assignee,omitempty"`
 	Milestone string   `json:"milestone,omitempty"`
-	Labels    []string `json:"labels,omitempty"`
+	Labels    []*Label `json:"labels,omitempty"`
 	Assignees []string `json:"assignees,omitempty"`
 	Type      string   `json:"type,omitempty"`
 }
@@ -47,7 +48,7 @@ type IssueUpdateRequest struct {
 	State       string   `json:"state"`
 	StateReason string   `json:"state_reason"`
 	Milestone   string   `json:"milestone,omitempty"`
-	Labels      []string `json:"labels,omitempty"`
+	Labels      []*Label `json:"labels,omitempty"`
 	Assignees   []string `json:"assignees,omitempty"`
 	Type        string   `json:"type,omitempty"`
 }
@@ -63,6 +64,15 @@ type IssueListOptions struct {
 	Since     *Timestamp
 	Sort      string
 	Direction string
+}
+
+type Label struct {
+	Id          int64  `json:"id"`
+	Url         string `json:"url"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Color       string `json:"color"`
+	Default     bool   `json:"default"`
 }
 
 func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, issueNum int) (*Issue, error) {
