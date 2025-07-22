@@ -27,9 +27,10 @@ type Client struct {
 	responseHook     func(*http.Response)
 	rateLimitHandler func(*http.Response) error
 
-	User         UsersService
-	Repositories RepositoriesService
-	Issues       IssuesService
+	User         *UsersService
+	Repositories *RepositoriesService
+	Issues       *IssuesService
+	PullRequests *PullRequestsService
 }
 
 const (
@@ -75,9 +76,9 @@ func NewClient(opts ...option) *Client {
 		retryWaitMax: defaultWaitMax,
 	}
 
-	client.User = UsersService{client: client}
-	client.Repositories = RepositoriesService{client: client}
-	client.Issues = IssuesService{client: client}
+	client.User = &UsersService{client: client}
+	client.Repositories = &RepositoriesService{client: client}
+	client.Issues = &IssuesService{client: client}
 
 	for _, opt := range opts {
 		opt(client)
