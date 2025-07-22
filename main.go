@@ -53,14 +53,10 @@ const (
 )
 
 func main() {
-	gc := NewClient()
-	ctx := context.Background()
 
 	// issues, _, err := gc.Issues.ListByRepo(ctx, "haadi-coder", "Test2", &IssueListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 1}})
 
-	user, err := gc.User.Get(ctx, "haadi-coder")
-
-	fmt.Print(user, err)
+	// fmt.Print(prs, err)
 
 	// fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
 }
@@ -76,9 +72,10 @@ func NewClient(opts ...option) *Client {
 		retryWaitMax: defaultWaitMax,
 	}
 
-	client.User = &UsersService{client: client}
-	client.Repositories = &RepositoriesService{client: client}
-	client.Issues = &IssuesService{client: client}
+	client.User = &UsersService{client}
+	client.Repositories = &RepositoriesService{client}
+	client.Issues = &IssuesService{client}
+	client.PullRequests = &PullRequestsService{client}
 
 	for _, opt := range opts {
 		opt(client)

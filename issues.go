@@ -73,9 +73,7 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, 
 	}
 
 	issue := new(Issue)
-	_, err = s.client.Do(ctx, req, issue)
-
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, issue); err != nil {
 		return nil, err
 	}
 
@@ -85,14 +83,12 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, 
 func (s *IssuesService) Create(ctx context.Context, owner string, repoName string, body *IssueCreateRequest) (*Issue, error) {
 	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues")
 	req, err := s.client.NewRequest(http.MethodPost, url.String(), body)
-
 	if err != nil {
 		return nil, err
 	}
 
 	issue := new(Issue)
-	_, err = s.client.Do(ctx, req, issue)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, issue); err != nil {
 		return nil, err
 	}
 
@@ -107,8 +103,7 @@ func (s *IssuesService) Edit(ctx context.Context, owner string, repoName string,
 	}
 
 	issue := new(Issue)
-	_, err = s.client.Do(ctx, req, issue)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, issue); err != nil {
 		return nil, err
 	}
 
@@ -126,8 +121,7 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repoName string,
 		return err
 	}
 
-	_, err = s.client.Do(ctx, req, nil)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
 
@@ -141,8 +135,7 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repoName strin
 		return err
 	}
 
-	_, err = s.client.Do(ctx, req, nil)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
 
@@ -232,8 +225,7 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repoNam
 	}
 
 	comment := new(IssueComment)
-	_, err = s.client.Do(ctx, req, comment)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, comment); err != nil {
 		return nil, err
 	}
 

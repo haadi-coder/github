@@ -43,7 +43,7 @@ type UserUpdateRequest struct {
 }
 type UsersListOptions struct {
 	Since int
-	ListOptions
+	*ListOptions
 }
 
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
@@ -174,8 +174,7 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 		return err
 	}
 
-	_, err = s.client.Do(ctx, req, nil)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
 
@@ -189,8 +188,7 @@ func (s *UsersService) Unfollow(ctx context.Context, username string) error {
 		return err
 	}
 
-	_, err = s.client.Do(ctx, req, nil)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
 

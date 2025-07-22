@@ -84,8 +84,7 @@ func (s *RepositoriesService) Get(ctx context.Context, owner string, repoName st
 	}
 
 	repo := new(Repository)
-	_, err = s.client.Do(ctx, req, repo)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, repo); err != nil {
 		return nil, err
 	}
 
@@ -100,8 +99,7 @@ func (s *RepositoriesService) Edit(ctx context.Context, owner string, repoName s
 	}
 
 	repo := new(Repository)
-	_, err = s.client.Do(ctx, req, repo)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, repo); err != nil {
 		return nil, err
 	}
 
@@ -110,14 +108,12 @@ func (s *RepositoriesService) Edit(ctx context.Context, owner string, repoName s
 
 func (s *RepositoriesService) Delete(ctx context.Context, owner string, repoName string) error {
 	url := s.client.baseUrl.JoinPath("repos", owner, repoName).String()
-
 	req, err := s.client.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.client.Do(ctx, req, nil)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, nil); err != nil {
 		return err
 	}
 
@@ -132,8 +128,7 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 	}
 
 	repo := new(Repository)
-	_, err = s.client.Do(ctx, req, repo)
-	if err != nil {
+	if _, err = s.client.Do(ctx, req, repo); err != nil {
 		return nil, err
 	}
 
