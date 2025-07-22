@@ -29,6 +29,7 @@ type Client struct {
 
 	User         UsersService
 	Repositories RepositoriesService
+	Issues       IssuesService
 }
 
 const (
@@ -54,15 +55,16 @@ func main() {
 	gc := NewClient()
 	ctx := context.Background()
 
-	// repo, err := gc.Repositories.Get(ctx, "haadi-coder", "color")
-	repos, _, err := gc.Repositories.List(ctx, "haadi-coder", &RepositoryListOptions{ListOptions: &ListOptions{Page: 2, PerPage: 10}})
+	issue, err := gc.Issues.CreateComment(ctx, "haadi-coder", "Test2", 1, IssueCommentRequest{Body: "99999999999999999999999"})
 
-	for _, repo := range repos {
-		fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
-	}
+	// for _, issue := range issues {
+	// 	fmt.Println(issue.Body)
+
+	// }
+
+	fmt.Print(issue, err)
 
 	// fmt.Printf("ID: %d\nOwner: %s\nName: %s\nFullname: %s\n", repo.Id, repo.Owner.Login, repo.Name, repo.Fullname)
-	fmt.Print(err)
 }
 
 func NewClient(opts ...option) *Client {
@@ -78,6 +80,7 @@ func NewClient(opts ...option) *Client {
 
 	client.User = UsersService{client: client}
 	client.Repositories = RepositoriesService{client: client}
+	client.Issues = IssuesService{client: client}
 
 	for _, opt := range opts {
 		opt(client)

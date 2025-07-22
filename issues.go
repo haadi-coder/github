@@ -56,52 +56,17 @@ type IssueListOptions struct {
 
 func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, issueNum int) (*Issue, error) {
 	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	issue := new(Issue)
-	_, err = s.client.fetch(ctx, req, issue)
-	if err != nil {
-		return nil, err
-	}
-
-	return issue, nil
+	return fetchIssue[Issue](ctx, s.client, http.MethodGet, path, nil)
 }
-
-// TODO: Подумать над вынесением повтряющихся частей path в константы
 
 func (s *IssuesService) Create(ctx context.Context, owner string, repoName string, body *IssueRequest) (*Issue, error) {
 	path, _ := url.JoinPath("repos", owner, repoName, "issues")
-	req, err := s.client.NewRequest(http.MethodPost, path, body)
-	if err != nil {
-		return nil, err
-	}
-
-	issue := new(Issue)
-	_, err = s.client.fetch(ctx, req, issue)
-	if err != nil {
-		return nil, err
-	}
-
-	return issue, nil
+	return fetchIssue[Issue](ctx, s.client, http.MethodPost, path, body)
 }
 
 func (s *IssuesService) Edit(ctx context.Context, owner string, repoName string, issueNum int, body *IssueRequest) (*Issue, error) {
 	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	req, err := s.client.NewRequest(http.MethodPatch, path, body)
-	if err != nil {
-		return nil, err
-	}
-
-	issue := new(Issue)
-	_, err = s.client.fetch(ctx, req, issue)
-	if err != nil {
-		return nil, err
-	}
-
-	return issue, nil
+	return fetchIssue[Issue](ctx, s.client, http.MethodPatch, path, body)
 }
 
 type IssueLockRequest struct {
@@ -213,18 +178,7 @@ type IssueCommentListOptions struct {
 
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repoName string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
 	path, _ := url.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "comments")
-	req, err := s.client.NewRequest(http.MethodPost, path, body)
-	if err != nil {
-		return nil, err
-	}
-
-	comment := new(IssueComment)
-	_, err = s.client.fetch(ctx, req, comment)
-	if err != nil {
-		return nil, err
-	}
-
-	return comment, nil
+	return fetchIssue[IssueComment](ctx, s.client, http.MethodPost, path, body)
 }
 
 func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repoName string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
@@ -247,6 +201,8 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 		if opts.Direction != "" {
 			q.Set("direction", opts.Direction)
 		}
+
+		req.URL.RawQuery = q.Encode()
 	}
 
 	comments := new([]*IssueComment)
@@ -256,4 +212,19 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 	}
 
 	return *comments, res, nil
+}
+
+func fetchIssue[Res Issue | IssueComment](ctx context.Context, client *Client, method string, path string, body any) (*Res, error) {
+	req, err := client.NewRequest(method, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	result := new(Res)
+	_, err = client.fetch(ctx, req, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
