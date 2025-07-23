@@ -158,11 +158,10 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	}
 
 	var res *http.Response
-	var rateLim *RateLimit
 	var err error
+	var rateLim *RateLimit
 
 	maxAtm := max(c.retryMax, 1)
-
 	for atm := range maxAtm {
 		select {
 		case <-ctx.Done():
@@ -171,6 +170,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		res, err = c.hc.Do(req)
+		rateLim = getRateLimit(res)
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +179,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			c.responseHook(res)
 		}
 
-		rateLim = getRateLimit(res)
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			_ = res.Body.Close()
 
@@ -194,19 +193,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 				continue
 			}
 
-			var waitTime time.Duration
-			if rateLim.Reset != 0 {
-				resetTime := time.Unix(rateLim.Reset, 0)
-				waitTime = time.Until(resetTime)
-
-				if waitTime < 0 {
-					waitTime = time.Second
-				}
-			} else {
-				waitTime = c.calculateBackoff(atm)
-			}
-
-			time.Sleep(waitTime)
+			c.waitRateLimit(rateLim, atm)
 			continue
 		}
 
@@ -312,4 +299,20 @@ func parseLinkHeader(res *Response, link string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) waitRateLimit(rl *RateLimit, attempt int) {
+	var waitTime time.Duration
+	if rl.Reset != 0 {
+		resetTime := time.Unix(rl.Reset, 0)
+		waitTime = time.Until(resetTime)
+
+		if waitTime < 0 {
+			waitTime = time.Second
+		}
+	} else {
+		waitTime = c.calculateBackoff(attempt)
+	}
+
+	time.Sleep(waitTime)
 }
