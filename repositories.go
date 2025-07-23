@@ -10,7 +10,7 @@ type RepositoriesService struct {
 }
 
 type Repository struct {
-	Id              int        `json:"id"`
+	Id              int64      `json:"id"`
 	Name            string     `json:"name"`
 	Fullname        string     `json:"full_name"`
 	Owner           *User      `json:"owner"`
@@ -172,8 +172,10 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
 
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Type != nil {
 			q.Set("type", *opts.Type)
 		}
@@ -207,8 +209,10 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
 
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Anon != nil {
 			q.Set("anon", *opts.Anon)
 		}

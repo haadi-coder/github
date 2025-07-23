@@ -26,7 +26,10 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	rawUrl := s.client.baseUrl.JoinPath("search", "repositories")
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
+
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Order != nil {
 			q.Set("order", *opts.Order)
 		}
@@ -57,7 +60,10 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 	rawUrl := s.client.baseUrl.JoinPath("search", "users")
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
+
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Order != nil {
 			q.Set("order", *opts.Order)
 		}

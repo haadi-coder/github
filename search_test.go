@@ -27,7 +27,7 @@ func TestBuildSearchParams(t *testing.T) {
 	}
 }
 
-func TestRepositories(t *testing.T) {
+func TestSearch_Repositories(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/search/repositories", r.URL.Path)
 		assert.Equal(t, "GET", r.Method)
@@ -63,7 +63,7 @@ func TestRepositories(t *testing.T) {
 	assert.Equal(t, "go-lang", result.Items[0].Name)
 }
 
-func TestUsers(t *testing.T) {
+func TestSearch_Users(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/search/users", r.URL.Path)
 		assert.Equal(t, "GET", r.Method)

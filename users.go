@@ -81,7 +81,10 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
+
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Since != 0 {
 			q.Set("since", fmt.Sprintf("%d", opts.Since))
 		}

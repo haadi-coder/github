@@ -143,8 +143,10 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repoName s
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
 
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Base != nil {
 			q.Set("base", *opts.Base)
 		}

@@ -157,8 +157,10 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName s
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
 
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Assignee != nil {
 			q.Set("assignee", *opts.Assignee)
 		}
@@ -247,7 +249,10 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 
 	if opts != nil {
 		q := rawUrl.Query()
-		opts.paginateQuery(q)
+
+		if opts.ListOptions != nil {
+			opts.paginateQuery(q)
+		}
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
 			q.Set("since", string(t))
