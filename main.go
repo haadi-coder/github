@@ -55,19 +55,14 @@ const (
 )
 
 func main() {
-	gc := NewClient()
+	gc := NewClient(WithResposneHook(func(r *http.Response) {
+		rateLim := getRateLimit(r)
+		fmt.Print(rateLim.Remaining)
+	}), WithRateLimitRetry(true))
 	ctx := context.Background()
 
-	// paramValue := "GitHub Octocat in:readme user:defunkt"
+	gc.User.Get(ctx, "haadi-coder")
 
-	// Encode the string using url.QueryEscape()
-	// encodedValue := url.QueryEscape(paramValue)
-
-	issues, _, _ := gc.Issues.ListByRepo(ctx, "haadi-coder", "Test2", &IssueListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 5}})
-
-	for _, issue := range issues {
-		fmt.Println(issue.UpdatedAt)
-	}
 }
 
 func NewClient(opts ...option) *Client {
@@ -180,8 +175,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
-			_ = res.Body.Close()
-
 			if !c.rateLimitRetry {
 				return buildResponse(res, rateLim), buildErrorResponse(res)
 			}
@@ -192,15 +185,19 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 				}
 				continue
 			}
+			_ = res.Body.Close()
 
 			c.waitRateLimit(rateLim, atm)
 			continue
 		}
-
 		break
 	}
 
 	response := buildResponse(res, rateLim)
+
+	if res.StatusCode >= 400 {
+		return response, buildErrorResponse(res)
+	}
 
 	if v != nil {
 		if err := json.NewDecoder(res.Body).Decode(v); err != nil {
@@ -208,13 +205,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 	}
 
-	if err := res.Body.Close(); err != nil {
-		return response, err
-	}
-
-	if res.StatusCode >= 400 {
-		return response, buildErrorResponse(res)
-	}
+	_ = res.Body.Close()
 
 	return response, nil
 }
@@ -267,7 +258,7 @@ func parseLinkHeader(res *Response, link string) error {
 		}
 
 		rawUrl := strings.Trim(parts[0], "< >")
-		rel := strings.Trim(parts[1], " rel=")
+		rel := strings.ReplaceAll(strings.Trim(parts[1], " rel="), `"`, "")
 
 		url, err := url.Parse(rawUrl)
 		if err != nil {
