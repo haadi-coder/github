@@ -1,4 +1,4 @@
-package main
+package github
 
 import (
 	"bytes"
@@ -53,17 +53,6 @@ const (
 	linkFirst = "first"
 	linkLast  = "last"
 )
-
-func main() {
-	gc := NewClient(WithResposneHook(func(r *http.Response) {
-		rateLim := getRateLimit(r)
-		fmt.Print(rateLim.Remaining)
-	}), WithRateLimitRetry(true))
-	ctx := context.Background()
-
-	gc.User.Get(ctx, "haadi-coder")
-
-}
 
 func NewClient(opts ...option) *Client {
 	parsed, _ := url.Parse(defaultBaseUrl)

@@ -1,4 +1,4 @@
-package main
+package github
 
 import (
 	"context"
@@ -32,14 +32,14 @@ type User struct {
 }
 
 type UserUpdateRequest struct {
-	Name            string `json:"name"`
-	Email           string `json:"email"`
-	Blog            string `json:"blog"`
-	TwitterUsername string `json:"twitter_username"`
-	Company         string `json:"company"`
-	Location        string `json:"location"`
-	Hireable        bool   `json:"hireable"`
-	Bio             string `json:"bio"`
+	Name            string `json:"name,omitempty"`
+	Email           string `json:"email,omitempty"`
+	Blog            string `json:"blog,omitempty"`
+	TwitterUsername string `json:"twitter_username,omitempty"`
+	Company         string `json:"company,omitempty"`
+	Location        string `json:"location,omitempty"`
+	Hireable        bool   `json:"hireable,omitempty"`
+	Bio             string `json:"bio,omitempty"`
 }
 type UsersListOptions struct {
 	Since int
