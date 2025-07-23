@@ -1,16 +1,55 @@
 package main
 
 import (
+	"context"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
 )
 
+type RateLimitService struct {
+	client *Client
+}
+
 type RateLimit struct {
-	Limit     int
-	Remaining int
-	Reset     int64
+	Limit     int   `json:"limit"`
+	Remaining int   `json:"remaining"`
+	Used      int   `json:"used"`
+	Reset     int64 `json:"reset"`
+}
+
+type RateLimitResponse struct {
+	Resources struct {
+		Core                      *RateLimit
+		Search                    *RateLimit
+		Graphql                   *RateLimit
+		IntegrationManifest       *RateLimit
+		SourceImport              *RateLimit
+		CodeScanningUpload        *RateLimit
+		ActionsRunnerRegistration *RateLimit
+		Scim                      *RateLimit
+		DependencySnapshots       *RateLimit
+		CodeSearch                *RateLimit
+		CodeScanningAutofix       *RateLimit
+	}
+	Rate *RateLimit
+}
+
+func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) {
+	url := s.client.baseUrl.JoinPath("rate_limit").String()
+
+	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	rl := new(RateLimitResponse)
+	if _, err := s.client.Do(ctx, req, rl); err != nil {
+		return nil, err
+	}
+
+	return rl, nil
 }
 
 func getRateLimit(res *http.Response) *RateLimit {
@@ -33,6 +72,8 @@ func getRateLimit(res *http.Response) *RateLimit {
 			rl.Reset = intRes
 		}
 	}
+
+	rl.Used = rl.Limit - rl.Remaining
 
 	return &rl
 }

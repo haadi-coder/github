@@ -32,6 +32,7 @@ type Client struct {
 	Issues       *IssuesService
 	PullRequests *PullRequestsService
 	Search       *SearchService
+	RateLimit    *RateLimitService
 }
 
 const (
@@ -93,6 +94,7 @@ func NewClient(opts ...option) *Client {
 	client.Issues = &IssuesService{client}
 	client.PullRequests = &PullRequestsService{client}
 	client.Search = &SearchService{client}
+	client.RateLimit = &RateLimitService{client}
 
 	for _, opt := range opts {
 		opt(client)
