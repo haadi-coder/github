@@ -5,21 +5,22 @@ import (
 	"time"
 )
 
-type Timestamp time.Time
+type Timestamp struct {
+	time.Time
+}
 
-func (t Timestamp) MarshalJSON() ([]byte, error) {
-	tm := time.Time(t)
-	if tm.IsZero() {
+func (t *Timestamp) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
 		return []byte{}, nil
 	}
 
-	return []byte(tm.Format(time.RFC3339)), nil
+	return []byte(t.Format(time.RFC3339)), nil
 }
 
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
 	s := strings.Trim(string(data), "\"")
 	if s == "null" {
-		*t = Timestamp(time.Time{})
+		t.Time = time.Time{}
 		return nil
 	}
 
@@ -28,6 +29,6 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*t = Timestamp(parsed)
+	t.Time = parsed
 	return nil
 }

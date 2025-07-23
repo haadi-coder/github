@@ -63,17 +63,10 @@ func main() {
 	// Encode the string using url.QueryEscape()
 	// encodedValue := url.QueryEscape(paramValue)
 
-	res, _ := gc.Search.Repositories(ctx, "language:go stars:>1000", &SearchOptions{
-		Sort:  "stars",
-		Order: "desc",
-		ListOptions: &ListOptions{
-			Page:    1,
-			PerPage: 10,
-		},
-	})
+	issues, _, _ := gc.Issues.ListByRepo(ctx, "haadi-coder", "Test2", &IssueListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 5}})
 
-	for _, repo := range res.Items {
-		fmt.Println(repo.Fullname, repo.Owner.Login)
+	for _, issue := range issues {
+		fmt.Println(issue.UpdatedAt)
 	}
 
 }
