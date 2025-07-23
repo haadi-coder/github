@@ -102,10 +102,10 @@ type RepositoryUpdateRequest struct {
 
 type RepositoryListOptions struct {
 	*ListOptions
-	Type      string
-	Sort      string
-	Direction string
-	Anon      string
+	Type      *string
+	Sort      *string
+	Direction *string
+	Anon      *string
 }
 
 func (s *RepositoriesService) Get(ctx context.Context, owner string, repoName string) (*Repository, error) {
@@ -174,14 +174,14 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
 
-		if opts.Type != "" {
-			q.Set("type", opts.Type)
+		if opts.Type != nil {
+			q.Set("type", *opts.Type)
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
-		if opts.Direction != "" {
-			q.Set("direction", opts.Direction)
+		if opts.Direction != nil {
+			q.Set("direction", *opts.Direction)
 		}
 
 		rawUrl.RawQuery = q.Encode()
@@ -209,8 +209,8 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
 
-		if opts.Anon != "" {
-			q.Set("anon", opts.Anon)
+		if opts.Anon != nil {
+			q.Set("anon", *opts.Anon)
 		}
 
 		rawUrl.RawQuery = q.Encode()

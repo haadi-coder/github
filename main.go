@@ -68,7 +68,6 @@ func main() {
 	for _, issue := range issues {
 		fmt.Println(issue.UpdatedAt)
 	}
-
 }
 
 func NewClient(opts ...option) *Client {

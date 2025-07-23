@@ -18,8 +18,8 @@ type Search[T Repository | User] struct {
 
 type SearchOptions struct {
 	*ListOptions
-	Sort  string
-	Order string
+	Sort  *string
+	Order *string
 }
 
 func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
@@ -27,11 +27,11 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	if opts != nil {
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
-		if opts.Order != "" {
-			q.Set("order", opts.Order)
+		if opts.Order != nil {
+			q.Set("order", *opts.Order)
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
 
 		rawUrl.RawQuery = q.Encode()
@@ -58,11 +58,11 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 	if opts != nil {
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
-		if opts.Order != "" {
-			q.Set("order", opts.Order)
+		if opts.Order != nil {
+			q.Set("order", *opts.Order)
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
 
 		rawUrl.RawQuery = q.Encode()

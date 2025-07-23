@@ -38,10 +38,10 @@ type PullRequest struct {
 }
 
 type PullRequestCreateRequest struct {
-	Title              string `json:"title,omitempty"`
 	Head               string `json:"head"`
-	HeadRepo           string `json:"head_repo,omitempty"`
 	Base               string `json:"base"`
+	Title              string `json:"title,omitempty"`
+	HeadRepo           string `json:"head_repo,omitempty"`
 	Body               string `json:"body,omitempty"`
 	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
 	Draft              bool   `json:"draft,omitempty"`
@@ -71,11 +71,11 @@ type MergeRequest struct {
 
 type PullRequestListOptions struct {
 	*ListOptions
-	State     string
-	Head      string
-	Base      string
-	Sort      string
-	Direction string
+	State     *string
+	Head      *string
+	Base      *string
+	Sort      *string
+	Direction *string
 }
 
 func (s *PullRequestsService) Get(ctx context.Context, owner string, repoName string, pullNum int) (*PullRequest, error) {
@@ -145,20 +145,20 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repoName s
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
 
-		if opts.Base != "" {
-			q.Set("base", opts.Base)
+		if opts.Base != nil {
+			q.Set("base", *opts.Base)
 		}
-		if opts.Direction != "" {
-			q.Set("direction", opts.Direction)
+		if opts.Direction != nil {
+			q.Set("direction", *opts.Direction)
 		}
-		if opts.Head != "" {
-			q.Set("head", opts.Head)
+		if opts.Head != nil {
+			q.Set("head", *opts.Head)
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
-		if opts.State != "" {
-			q.Set("state", opts.State)
+		if opts.State != nil {
+			q.Set("state", *opts.State)
 		}
 
 		rawUrl.RawQuery = q.Encode()

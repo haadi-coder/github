@@ -55,15 +55,15 @@ type IssueUpdateRequest struct {
 
 type IssueListOptions struct {
 	*ListOptions
-	State     string
-	Assignee  string
-	Type      string
-	Creator   string
-	Mentioned string
+	State     *string
+	Assignee  *string
+	Type      *string
+	Creator   *string
+	Mentioned *string
 	Labels    []string
 	Since     *Timestamp
-	Sort      string
-	Direction string
+	Sort      *string
+	Direction *string
 }
 
 type Label struct {
@@ -159,20 +159,20 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName s
 		q := rawUrl.Query()
 		opts.paginateQuery(q)
 
-		if opts.Assignee != "" {
-			q.Set("assignee", opts.Assignee)
+		if opts.Assignee != nil {
+			q.Set("assignee", *opts.Assignee)
 		}
-		if opts.Creator != "" {
-			q.Set("creator", opts.Creator)
+		if opts.Creator != nil {
+			q.Set("creator", *opts.Creator)
 		}
-		if opts.Mentioned != "" {
-			q.Set("mentioned", opts.Mentioned)
+		if opts.Mentioned != nil {
+			q.Set("mentioned", *opts.Mentioned)
 		}
-		if opts.State != "" {
-			q.Set("state", opts.State)
+		if opts.State != nil {
+			q.Set("state", *opts.State)
 		}
-		if opts.Type != "" {
-			q.Set("type", opts.Type)
+		if opts.Type != nil {
+			q.Set("type", *opts.Type)
 		}
 		if len(opts.Labels) != 0 {
 			q.Set("labels", strings.Join(opts.Labels, ","))
@@ -181,11 +181,11 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName s
 			t, _ := opts.Since.MarshalJSON()
 			q.Set("since", string(t))
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
-		if opts.Direction != "" {
-			q.Set("direction", opts.Direction)
+		if opts.Direction != nil {
+			q.Set("direction", *opts.Direction)
 		}
 
 		rawUrl.RawQuery = q.Encode()
@@ -223,8 +223,8 @@ type IssueComment struct {
 type IssueCommentListOptions struct {
 	*ListOptions
 	Since     *Timestamp
-	Sort      string
-	Direction string
+	Sort      *string
+	Direction *string
 }
 
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repoName string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
@@ -252,11 +252,11 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 			t, _ := opts.Since.MarshalJSON()
 			q.Set("since", string(t))
 		}
-		if opts.Sort != "" {
-			q.Set("sort", opts.Sort)
+		if opts.Sort != nil {
+			q.Set("sort", *opts.Sort)
 		}
-		if opts.Direction != "" {
-			q.Set("direction", opts.Direction)
+		if opts.Direction != nil {
+			q.Set("direction", *opts.Direction)
 		}
 
 		rawUrl.RawQuery = q.Encode()
