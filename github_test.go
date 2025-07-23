@@ -63,10 +63,10 @@ func TestWaitRateLimit(t *testing.T) {
 		{
 			name:         "Reset == 0, attempt=100 (ограничение retryWaitMax)",
 			retryWaitMin: 5,
-			retryWaitMax: 60,
+			retryWaitMax: 10,
 			rl:           &RateLimit{Reset: 0},
 			attempt:      100,
-			expectedWait: 60 * time.Second, // max = 60
+			expectedWait: 10 * time.Second, // max = 60
 		},
 		{
 			name:         "Reset == 0, retryWaitMin по умолчанию",
@@ -81,7 +81,6 @@ func TestWaitRateLimit(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
 			client := NewClient(
 				WithRetryWaitMin(float64(tc.retryWaitMin)),
 				WithRetryWaitMax(float64(tc.retryWaitMax)),
