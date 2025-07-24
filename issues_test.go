@@ -178,7 +178,7 @@ func TestIssuesService_Create(t *testing.T) {
 	}
 }
 
-func TestIssuesService_Edit(t *testing.T) {
+func TestIssuesService_Update(t *testing.T) {
 	tests := []struct {
 		name           string
 		owner          string
@@ -237,7 +237,7 @@ func TestIssuesService_Edit(t *testing.T) {
 
 			client := NewClient(WithBaseURl(ts.URL))
 
-			issue, err := client.Issues.Edit(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
+			issue, err := client.Issues.Update(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 

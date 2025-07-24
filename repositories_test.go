@@ -90,7 +90,7 @@ func TestRepositoriesService_Edit(t *testing.T) {
 
 	client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
 
-	repo, err := client.Repositories.Edit(context.Background(), "octocat", "Hello-World", req)
+	repo, err := client.Repositories.Update(context.Background(), "octocat", "Hello-World", req)
 	require.NoError(t, err)
 	assert.Equal(t, "Updated description", repo.Description)
 }

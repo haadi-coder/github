@@ -106,7 +106,7 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 	return issue, nil
 }
 
-func (s *IssuesService) Edit(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
+func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {

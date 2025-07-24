@@ -125,7 +125,7 @@ func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string
 	return r, nil
 }
 
-func (s *RepositoriesService) Edit(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
+func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
