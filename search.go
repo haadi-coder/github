@@ -40,7 +40,9 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 			q.Set("sort", *opts.Sort)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	path += "&" + buildSearchParams(sq)
@@ -72,7 +74,10 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 		if opts.Sort != nil {
 			q.Set("sort", *opts.Sort)
 		}
-		path += "?" + q.Encode()
+
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	path += "&" + buildSearchParams(sq)

@@ -32,21 +32,6 @@ type User struct {
 	UpdatedAt   *Timestamp `json:"updated_at"`
 }
 
-type UserUpdateRequest struct {
-	Name            string `json:"name,omitempty"`
-	Email           string `json:"email,omitempty"`
-	Blog            string `json:"blog,omitempty"`
-	TwitterUsername string `json:"twitter_username,omitempty"`
-	Company         string `json:"company,omitempty"`
-	Location        string `json:"location,omitempty"`
-	Hireable        bool   `json:"hireable,omitempty"`
-	Bio             string `json:"bio,omitempty"`
-}
-type UsersListOptions struct {
-	Since int
-	*ListOptions
-}
-
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
 	path := fmt.Sprintf("users/%s", username)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -77,6 +62,11 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 	return user, nil
 }
 
+type UsersListOptions struct {
+	Since int
+	*ListOptions
+}
+
 func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*User, *Response, error) {
 	path := "users"
 
@@ -89,7 +79,9 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 			q.Set("since", fmt.Sprintf("%d", opts.Since))
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -104,6 +96,17 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	}
 
 	return *users, res, nil
+}
+
+type UserUpdateRequest struct {
+	Name            string `json:"name,omitempty"`
+	Email           string `json:"email,omitempty"`
+	Blog            string `json:"blog,omitempty"`
+	TwitterUsername string `json:"twitter_username,omitempty"`
+	Company         string `json:"company,omitempty"`
+	Location        string `json:"location,omitempty"`
+	Hireable        bool   `json:"hireable,omitempty"`
+	Bio             string `json:"bio,omitempty"`
 }
 
 func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
@@ -127,7 +130,10 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 	if opts != nil {
 		q := url.Values{}
 		opts.paginateQuery(q)
-		path += "?" + q.Encode()
+
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -150,7 +156,10 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 	if opts != nil {
 		q := url.Values{}
 		opts.paginateQuery(q)
-		path += "?" + q.Encode()
+
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)

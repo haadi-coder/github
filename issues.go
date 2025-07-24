@@ -12,6 +12,15 @@ type IssuesService struct {
 	client *Client
 }
 
+type Label struct {
+	Id          int64  `json:"id"`
+	Url         string `json:"url"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Color       string `json:"color"`
+	Default     bool   `json:"default"`
+}
+
 type Issue struct {
 	Id            int64      `json:"id"`
 	Url           string     `json:"url"`
@@ -32,50 +41,6 @@ type Issue struct {
 	ClosedBy      *User      `json:"closed_by"`
 }
 
-type IssueCreateRequest struct {
-	Title     string   `json:"title"`
-	Body      string   `json:"body,omitempty"`
-	Assignee  string   `json:"assignee,omitempty"`
-	Milestone string   `json:"milestone,omitempty"`
-	Labels    []*Label `json:"labels,omitempty"`
-	Assignees []string `json:"assignees,omitempty"`
-	Type      string   `json:"type,omitempty"`
-}
-
-type IssueUpdateRequest struct {
-	Title       string   `json:"title"`
-	Body        string   `json:"body,omitempty"`
-	Assignee    string   `json:"assignee,omitempty"`
-	State       string   `json:"state"`
-	StateReason string   `json:"state_reason"`
-	Milestone   string   `json:"milestone,omitempty"`
-	Labels      []*Label `json:"labels,omitempty"`
-	Assignees   []string `json:"assignees,omitempty"`
-	Type        string   `json:"type,omitempty"`
-}
-
-type IssueListOptions struct {
-	*ListOptions
-	State     *string
-	Assignee  *string
-	Type      *string
-	Creator   *string
-	Mentioned *string
-	Labels    []string
-	Since     *Timestamp
-	Sort      *string
-	Direction *string
-}
-
-type Label struct {
-	Id          int64  `json:"id"`
-	Url         string `json:"url"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Color       string `json:"color"`
-	Default     bool   `json:"default"`
-}
-
 func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -91,6 +56,16 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issu
 	return issue, nil
 }
 
+type IssueCreateRequest struct {
+	Title     string   `json:"title"`
+	Body      string   `json:"body,omitempty"`
+	Assignee  string   `json:"assignee,omitempty"`
+	Milestone string   `json:"milestone,omitempty"`
+	Labels    []*Label `json:"labels,omitempty"`
+	Assignees []string `json:"assignees,omitempty"`
+	Type      string   `json:"type,omitempty"`
+}
+
 func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -104,6 +79,18 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 	}
 
 	return issue, nil
+}
+
+type IssueUpdateRequest struct {
+	Title       string   `json:"title"`
+	Body        string   `json:"body,omitempty"`
+	Assignee    string   `json:"assignee,omitempty"`
+	State       string   `json:"state"`
+	StateReason string   `json:"state_reason"`
+	Milestone   string   `json:"milestone,omitempty"`
+	Labels      []*Label `json:"labels,omitempty"`
+	Assignees   []string `json:"assignees,omitempty"`
+	Type        string   `json:"type,omitempty"`
 }
 
 func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
@@ -153,6 +140,19 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, i
 	return nil
 }
 
+type IssueListOptions struct {
+	*ListOptions
+	State     *string
+	Assignee  *string
+	Type      *string
+	Creator   *string
+	Mentioned *string
+	Labels    []string
+	Since     *Timestamp
+	Sort      *string
+	Direction *string
+}
+
 func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo string, opts *IssueListOptions) ([]*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
@@ -191,7 +191,9 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 			q.Set("direction", *opts.Direction)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -222,13 +224,6 @@ type IssueComment struct {
 	IssueUrl  string     `json:"issue_url"`
 }
 
-type IssueCommentListOptions struct {
-	*ListOptions
-	Since     *Timestamp
-	Sort      *string
-	Direction *string
-}
-
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -242,6 +237,13 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 	}
 
 	return comment, nil
+}
+
+type IssueCommentListOptions struct {
+	*ListOptions
+	Since     *Timestamp
+	Sort      *string
+	Direction *string
 }
 
 func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repo string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
@@ -264,7 +266,9 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 			q.Set("direction", *opts.Direction)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)

@@ -50,32 +50,6 @@ type Repository struct {
 	}
 }
 
-type RepositoryCreateRequest struct {
-	Name                     string `json:"name"`
-	Description              string `json:"description,omitempty"`
-	Homepage                 string `json:"homepage,omitempty"`
-	Private                  bool   `json:"private,omitempty"`
-	HasIssues                bool   `json:"has_issues,omitempty"`
-	HasProjects              bool   `json:"has_projects,omitempty"`
-	HasWiki                  bool   `json:"has_wiki,omitempty"`
-	HasDiscussions           bool   `json:"has_discussions,omitempty"`
-	TeamId                   int    `json:"team_id,omitempty"`
-	AutoInit                 bool   `json:"auto_init,omitempty"`
-	GitignoreTemplate        string `json:"gitignore_template,omitempty"`
-	LicenseTemplate          string `json:"license_template,omitempty"`
-	AllowSquashMerge         bool   `json:"allow_squash_merge,omitempty"`
-	AllowMergeCommit         bool   `json:"allow_merge_commit,omitempty"`
-	AllowRebaseMerge         bool   `json:"allow_rebase_merge,omitempty"`
-	AllowAutoMerge           bool   `json:"allow_auto_merge,omitempty"`
-	DeleteBranchOnMerge      bool   `json:"delete_branch_on_merge,omitempty"`
-	SquashMergeCommitTitle   string `json:"squash_merge_commit_title,omitempty"`
-	SquashMergeCommitMessage string `json:"squash_merge_commit_message,omitempty"`
-	MergeCommitTitle         string `json:"merge_commit_title,omitempty"`
-	MergeCommitMessage       string `json:"merge_commit_message,omitempty"`
-	HasDownloads             bool   `json:"has_downloads,omitempty"`
-	IsTemplate               bool   `json:"is_template,omitempty"`
-}
-
 type RepositoryUpdateRequest struct {
 	Name                      string `json:"name,omitempty"`
 	Description               string `json:"description,omitempty"`
@@ -100,14 +74,6 @@ type RepositoryUpdateRequest struct {
 	MergeCommitMessage        string `json:"merge_commit_message,omitempty"`
 	Archived                  bool   `json:"archived,omitempty"`
 	AllowForking              bool   `json:"allow_forking,omitempty"`
-}
-
-type RepositoryListOptions struct {
-	*ListOptions
-	Type      *string
-	Sort      *string
-	Direction *string
-	Anon      *string
 }
 
 func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
@@ -154,6 +120,32 @@ func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo str
 	return nil
 }
 
+type RepositoryCreateRequest struct {
+	Name                     string `json:"name"`
+	Description              string `json:"description,omitempty"`
+	Homepage                 string `json:"homepage,omitempty"`
+	Private                  bool   `json:"private,omitempty"`
+	HasIssues                bool   `json:"has_issues,omitempty"`
+	HasProjects              bool   `json:"has_projects,omitempty"`
+	HasWiki                  bool   `json:"has_wiki,omitempty"`
+	HasDiscussions           bool   `json:"has_discussions,omitempty"`
+	TeamId                   int    `json:"team_id,omitempty"`
+	AutoInit                 bool   `json:"auto_init,omitempty"`
+	GitignoreTemplate        string `json:"gitignore_template,omitempty"`
+	LicenseTemplate          string `json:"license_template,omitempty"`
+	AllowSquashMerge         bool   `json:"allow_squash_merge,omitempty"`
+	AllowMergeCommit         bool   `json:"allow_merge_commit,omitempty"`
+	AllowRebaseMerge         bool   `json:"allow_rebase_merge,omitempty"`
+	AllowAutoMerge           bool   `json:"allow_auto_merge,omitempty"`
+	DeleteBranchOnMerge      bool   `json:"delete_branch_on_merge,omitempty"`
+	SquashMergeCommitTitle   string `json:"squash_merge_commit_title,omitempty"`
+	SquashMergeCommitMessage string `json:"squash_merge_commit_message,omitempty"`
+	MergeCommitTitle         string `json:"merge_commit_title,omitempty"`
+	MergeCommitMessage       string `json:"merge_commit_message,omitempty"`
+	HasDownloads             bool   `json:"has_downloads,omitempty"`
+	IsTemplate               bool   `json:"is_template,omitempty"`
+}
+
 func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateRequest) (*Repository, error) {
 	path := "user/repos"
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -167,6 +159,14 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 	}
 
 	return repo, nil
+}
+
+type RepositoryListOptions struct {
+	*ListOptions
+	Type      *string
+	Sort      *string
+	Direction *string
+	Anon      *string
 }
 
 func (s *RepositoriesService) List(ctx context.Context, owner string, opts *RepositoryListOptions) ([]*Repository, *Response, error) {
@@ -188,7 +188,9 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 			q.Set("direction", *opts.Direction)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -218,7 +220,9 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 			q.Set("anon", *opts.Anon)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)

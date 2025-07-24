@@ -38,47 +38,6 @@ type PullRequest struct {
 	StatusesUrl        string      `json:"statuses_url"`
 }
 
-type PullRequestCreateRequest struct {
-	Head               string `json:"head"`
-	Base               string `json:"base"`
-	Title              string `json:"title,omitempty"`
-	HeadRepo           string `json:"head_repo,omitempty"`
-	Body               string `json:"body,omitempty"`
-	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
-	Draft              bool   `json:"draft,omitempty"`
-	Issue              int    `json:"issue,omitempty"`
-}
-
-type PullRequestUpdateRequest struct {
-	Title              string `json:"title,omitempty"`
-	Base               string `json:"base,omitempty"`
-	Body               string `json:"body,omitempty"`
-	State              string `json:"state,omitempty"`
-	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
-}
-
-type Merge struct {
-	Sha     string `json:"sha"`
-	Merged  bool   `json:"merged"`
-	Message string `json:"message"`
-}
-
-type MergeRequest struct {
-	CommitTitle   string `json:"commit_title,omitempty"`
-	CommitMessage string `json:"commit_message,omitempty"`
-	Sha           string `json:"sha,omitempty"`
-	MergeMethod   string `json:"merge_method,omitempty"`
-}
-
-type PullRequestListOptions struct {
-	*ListOptions
-	State     *string
-	Head      *string
-	Base      *string
-	Sort      *string
-	Direction *string
-}
-
 func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -92,6 +51,17 @@ func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string
 	}
 
 	return pr, nil
+}
+
+type PullRequestCreateRequest struct {
+	Head               string `json:"head"`
+	Base               string `json:"base"`
+	Title              string `json:"title,omitempty"`
+	HeadRepo           string `json:"head_repo,omitempty"`
+	Body               string `json:"body,omitempty"`
+	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
+	Draft              bool   `json:"draft,omitempty"`
+	Issue              int    `json:"issue,omitempty"`
 }
 
 func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, error) {
@@ -109,6 +79,14 @@ func (s *PullRequestsService) Create(ctx context.Context, owner string, repo str
 	return pr, nil
 }
 
+type PullRequestUpdateRequest struct {
+	Title              string `json:"title,omitempty"`
+	Base               string `json:"base,omitempty"`
+	Body               string `json:"body,omitempty"`
+	State              string `json:"state,omitempty"`
+	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
+}
+
 func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
@@ -124,6 +102,19 @@ func (s *PullRequestsService) Update(ctx context.Context, owner string, repo str
 	return pr, nil
 }
 
+type MergeRequest struct {
+	CommitTitle   string `json:"commit_title,omitempty"`
+	CommitMessage string `json:"commit_message,omitempty"`
+	Sha           string `json:"sha,omitempty"`
+	MergeMethod   string `json:"merge_method,omitempty"`
+}
+
+type Merge struct {
+	Sha     string `json:"sha"`
+	Merged  bool   `json:"merged"`
+	Message string `json:"message"`
+}
+
 func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
@@ -137,6 +128,15 @@ func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo stri
 	}
 
 	return merge, nil
+}
+
+type PullRequestListOptions struct {
+	*ListOptions
+	State     *string
+	Head      *string
+	Base      *string
+	Sort      *string
+	Direction *string
 }
 
 func (s *PullRequestsService) List(ctx context.Context, owner string, repo string, opts *PullRequestListOptions) ([]*PullRequest, *Response, error) {
@@ -164,7 +164,9 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 			q.Set("state", *opts.State)
 		}
 
-		path += "?" + q.Encode()
+		if len(q) != 0 {
+			path += "?" + q.Encode()
+		}
 	}
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
