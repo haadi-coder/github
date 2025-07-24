@@ -27,9 +27,8 @@ type SearchOptions struct {
 func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
 	path := "search/repositories"
 
+	q := url.Values{}
 	if opts != nil {
-		q := url.Values{}
-
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
 		}
@@ -45,10 +44,15 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 		}
 	}
 
-	path += "&" + buildSearchParams(sq)
+	if len(q) != 0 {
+		path += "&" + buildSearchParams(sq)
+	} else {
+		path += "?" + buildSearchParams(sq)
+	}
+	
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	search := new(Search[Repository])
@@ -62,8 +66,8 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], error) {
 	path := "search/users"
 
+	q := url.Values{}
 	if opts != nil {
-		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -80,10 +84,15 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 		}
 	}
 
-	path += "&" + buildSearchParams(sq)
+	if len(q) != 0 {
+		path += "&" + buildSearchParams(sq)
+	} else {
+		path += "?" + buildSearchParams(sq)
+	}
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	search := new(Search[User])

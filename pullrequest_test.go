@@ -15,18 +15,17 @@ import (
 )
 
 func TestPullRequestsService_Get(t *testing.T) {
-
 	createdAt := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
 	updatedAt := time.Date(2023, 10, 11, 14, 30, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		pullNum        int
-		expectedUrl    string
-		responseBody   string
-		expectedResult *PullRequest
+		name         string
+		owner        string
+		repoName     string
+		pullNum      int
+		expectedUrl  string
+		responseBody string
+		expected     *PullRequest
 	}{
 		{
 			name:        "Get PullRequest",
@@ -42,7 +41,7 @@ func TestPullRequestsService_Get(t *testing.T) {
                 "created_at": "%s",
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
-			expectedResult: &PullRequest{
+			expected: &PullRequest{
 				Id:        1,
 				Title:     "Test PR",
 				Number:    1,
@@ -71,23 +70,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
-			assert.Equal(t, tt.expectedResult.Id, pr.Id)
-			assert.Equal(t, tt.expectedResult.Title, pr.Title)
-
-			if tt.expectedResult.CreatedAt != nil {
-				require.NotNil(t, pr.CreatedAt)
-				assert.Equal(t, tt.expectedResult.CreatedAt.Format(time.RFC3339), pr.CreatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.CreatedAt)
-			}
-
-			if tt.expectedResult.UpdatedAt != nil {
-				require.NotNil(t, pr.UpdatedAt)
-				assert.Equal(t, tt.expectedResult.UpdatedAt.Format(time.RFC3339), pr.UpdatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.UpdatedAt)
-			}
-
+			assert.Equal(t, tt.expected, pr)
 		})
 	}
 }
@@ -97,13 +80,13 @@ func TestPullRequestsService_Create(t *testing.T) {
 	updatedAt := time.Date(2023, 10, 11, 14, 30, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		body           *PullRequestCreateRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *PullRequest
+		name         string
+		owner        string
+		repoName     string
+		body         *PullRequestCreateRequest
+		expectedUrl  string
+		responseBody string
+		expected     *PullRequest
 	}{
 		{
 			name:     "Creating PR",
@@ -124,7 +107,7 @@ func TestPullRequestsService_Create(t *testing.T) {
                 "created_at": "%s",
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
-			expectedResult: &PullRequest{
+			expected: &PullRequest{
 				Id:        1,
 				Title:     "New feature",
 				Number:    1,
@@ -159,22 +142,7 @@ func TestPullRequestsService_Create(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
-			assert.Equal(t, tt.expectedResult.Id, pr.Id)
-			assert.Equal(t, tt.expectedResult.Title, pr.Title)
-
-			if tt.expectedResult.CreatedAt != nil {
-				require.NotNil(t, pr.CreatedAt)
-				assert.Equal(t, tt.expectedResult.CreatedAt.Format(time.RFC3339), pr.CreatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.CreatedAt)
-			}
-
-			if tt.expectedResult.UpdatedAt != nil {
-				require.NotNil(t, pr.UpdatedAt)
-				assert.Equal(t, tt.expectedResult.UpdatedAt.Format(time.RFC3339), pr.UpdatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.UpdatedAt)
-			}
+			assert.Equal(t, tt.expected, pr)
 		})
 	}
 }
@@ -184,14 +152,14 @@ func TestPullRequestsService_Update(t *testing.T) {
 	updatedAt := time.Date(2023, 10, 12, 15, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		pullNum        int
-		body           *PullRequestUpdateRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *PullRequest
+		name         string
+		owner        string
+		repoName     string
+		pullNum      int
+		body         *PullRequestUpdateRequest
+		expectedUrl  string
+		responseBody string
+		expected     *PullRequest
 	}{
 		{
 			name:     "Update PR",
@@ -211,7 +179,7 @@ func TestPullRequestsService_Update(t *testing.T) {
                 "created_at": "%s",
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
-			expectedResult: &PullRequest{
+			expected: &PullRequest{
 				Id:        1,
 				Title:     "Updated title",
 				Number:    1,
@@ -246,22 +214,7 @@ func TestPullRequestsService_Update(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
-			assert.Equal(t, tt.expectedResult.Id, pr.Id)
-			assert.Equal(t, tt.expectedResult.Title, pr.Title)
-
-			if tt.expectedResult.CreatedAt != nil {
-				require.NotNil(t, pr.CreatedAt)
-				assert.Equal(t, tt.expectedResult.CreatedAt.Format(time.RFC3339), pr.CreatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.CreatedAt)
-			}
-
-			if tt.expectedResult.UpdatedAt != nil {
-				require.NotNil(t, pr.UpdatedAt)
-				assert.Equal(t, tt.expectedResult.UpdatedAt.Format(time.RFC3339), pr.UpdatedAt.Format(time.RFC3339))
-			} else {
-				assert.Nil(t, pr.UpdatedAt)
-			}
+			assert.Equal(t, tt.expected, pr)
 		})
 	}
 }
@@ -270,14 +223,14 @@ func TestPullRequestsService_Merge(t *testing.T) {
 	mergedAt := time.Date(2023, 10, 13, 16, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		pullNum        int
-		body           *MergeRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *Merge
+		name         string
+		owner        string
+		repoName     string
+		pullNum      int
+		body         *MergeRequest
+		expectedUrl  string
+		responseBody string
+		expected     *Merge
 	}{
 		{
 			name:     "Merge PR",
@@ -295,7 +248,7 @@ func TestPullRequestsService_Merge(t *testing.T) {
                 "message": "PR merged",
                 "updated_at": "%s"
             }`, mergedAt.Format(time.RFC3339)),
-			expectedResult: &Merge{
+			expected: &Merge{
 				Sha:     "abc123",
 				Merged:  true,
 				Message: "PR merged",
@@ -327,8 +280,7 @@ func TestPullRequestsService_Merge(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, merge)
 
-			assert.Equal(t, tt.expectedResult.Sha, merge.Sha)
-			assert.Equal(t, tt.expectedResult.Merged, merge.Merged)
+			assert.Equal(t, tt.expected, merge)
 		})
 	}
 }
@@ -339,13 +291,13 @@ func TestPullRequestsService_List(t *testing.T) {
 
 	state := "open"
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		opts           *PullRequestListOptions
-		expectedUrl    string
-		responseBody   string
-		expectedResult []*PullRequest
+		name         string
+		owner        string
+		repoName     string
+		opts         *PullRequestListOptions
+		expectedUrl  string
+		responseBody string
+		expected     []*PullRequest
 	}{
 		{
 			name:     "List of PRs",
@@ -375,7 +327,7 @@ func TestPullRequestsService_List(t *testing.T) {
                 }
             ]`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339),
 				createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
-			expectedResult: []*PullRequest{
+			expected: []*PullRequest{
 				{
 					Id:        1,
 					Title:     "PR 1",
@@ -413,26 +365,9 @@ func TestPullRequestsService_List(t *testing.T) {
 			prs, _, err := client.PullRequests.List(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, prs)
-			assert.Len(t, prs, len(tt.expectedResult))
+			assert.Len(t, prs, len(tt.expected))
 
-			for i := range prs {
-				assert.Equal(t, tt.expectedResult[i].Id, prs[i].Id)
-				assert.Equal(t, tt.expectedResult[i].Title, prs[i].Title)
-
-				if tt.expectedResult[i].CreatedAt != nil {
-					require.NotNil(t, prs[i].CreatedAt)
-					assert.Equal(t, tt.expectedResult[i].CreatedAt.Format(time.RFC3339), prs[i].CreatedAt.Format(time.RFC3339))
-				} else {
-					assert.Nil(t, prs[i].CreatedAt)
-				}
-
-				if tt.expectedResult[i].UpdatedAt != nil {
-					require.NotNil(t, prs[i].UpdatedAt)
-					assert.Equal(t, tt.expectedResult[i].UpdatedAt.Format(time.RFC3339), prs[i].UpdatedAt.Format(time.RFC3339))
-				} else {
-					assert.Nil(t, prs[i].UpdatedAt)
-				}
-			}
+			assert.Equal(t, tt.expected, prs)
 		})
 	}
 }

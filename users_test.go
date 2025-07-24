@@ -19,7 +19,7 @@ func TestUsersService_Get(t *testing.T) {
 		method         string
 		responseStatus int
 		responseBody   string
-		expectedUser   *User
+		expected       *User
 	}{
 		{
 			name:           "Get user",
@@ -27,7 +27,7 @@ func TestUsersService_Get(t *testing.T) {
 			method:         "GET",
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":1,"login":"testuser","name":"Test User"}`,
-			expectedUser: &User{
+			expected: &User{
 				Id:    1,
 				Login: "testuser",
 				Name:  "Test User",
@@ -50,11 +50,9 @@ func TestUsersService_Get(t *testing.T) {
 			client := NewClient(WithBaseURl(ts.URL))
 
 			user, err := client.User.Get(context.Background(), "testuser")
-			if tt.expectedUser != nil {
+			if tt.expected != nil {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedUser.Id, user.Id)
-				assert.Equal(t, tt.expectedUser.Login, user.Login)
-				assert.Equal(t, tt.expectedUser.Name, user.Name)
+				assert.Equal(t, tt.expected, user)
 			} else {
 				require.Error(t, err)
 			}
@@ -70,7 +68,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 		token          string
 		responseStatus int
 		responseBody   string
-		expectedUser   *User
+		expected       *User
 	}{
 		{
 			name:           "Get Authenticated user",
@@ -79,7 +77,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			token:          "test-token",
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":2,"login":"authuser","name":"Auth User"}`,
-			expectedUser: &User{
+			expected: &User{
 				Id:    2,
 				Login: "authuser",
 				Name:  "Auth User",
@@ -92,7 +90,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			token:          "",
 			responseStatus: http.StatusUnauthorized,
 			responseBody:   `{"message":"Unauthorized"}`,
-			expectedUser:   nil,
+			expected:       nil,
 		},
 	}
 
@@ -114,11 +112,9 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			client := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
 
 			user, err := client.User.GetAuthenticated(context.Background())
-			if tt.expectedUser != nil {
+			if tt.expected != nil {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedUser.Id, user.Id)
-				assert.Equal(t, tt.expectedUser.Login, user.Login)
-				assert.Equal(t, tt.expectedUser.Name, user.Name)
+				assert.Equal(t, tt.expected, user)
 			} else {
 				require.Error(t, err)
 			}
@@ -134,7 +130,7 @@ func TestUsersService_List(t *testing.T) {
 		opts           *UsersListOptions
 		responseStatus int
 		responseBody   string
-		expectedUsers  []*User
+		expected       []*User
 		expectedQuery  string
 	}{
 		{
@@ -144,7 +140,7 @@ func TestUsersService_List(t *testing.T) {
 			opts:           &UsersListOptions{Since: 1, ListOptions: &ListOptions{Page: 2, PerPage: 50}},
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"login":"user1"},{"id":2,"login":"user2"}]`,
-			expectedUsers: []*User{
+			expected: []*User{
 				{Id: 1, Login: "user1"},
 				{Id: 2, Login: "user2"},
 			},
@@ -157,7 +153,7 @@ func TestUsersService_List(t *testing.T) {
 			opts:           &UsersListOptions{ListOptions: &ListOptions{Page: 1, PerPage: 30}},
 			responseStatus: http.StatusOK,
 			responseBody:   `[]`,
-			expectedUsers:  []*User{},
+			expected:       []*User{},
 			expectedQuery:  "page=1&per_page=30",
 		},
 	}
@@ -180,12 +176,9 @@ func TestUsersService_List(t *testing.T) {
 			userList, resp, err := client.User.List(context.Background(), tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			if len(tt.expectedUsers) > 0 {
-				assert.Len(t, userList, len(tt.expectedUsers))
-				for i := range userList {
-					assert.Equal(t, tt.expectedUsers[i].Id, userList[i].Id)
-					assert.Equal(t, tt.expectedUsers[i].Login, userList[i].Login)
-				}
+			if len(tt.expected) > 0 {
+				assert.Len(t, userList, len(tt.expected))
+				assert.Equal(t, tt.expected, userList)
 			} else {
 				assert.Empty(t, userList)
 			}
@@ -202,7 +195,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 		requestBody    string
 		responseStatus int
 		responseBody   string
-		expectedUser   *User
+		expected       *User
 	}{
 		{
 			name:           "Update profile",
@@ -212,7 +205,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			requestBody:    `{"name":"New Name","email":"new@example.com"}`,
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":3,"name":"New Name","email":"new@example.com"}`,
-			expectedUser: &User{
+			expected: &User{
 				Id:    3,
 				Name:  "New Name",
 				Email: "new@example.com",
@@ -226,7 +219,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			requestBody:    `{"name":"New Name"}`,
 			responseStatus: http.StatusForbidden,
 			responseBody:   `{"message":"Forbidden"}`,
-			expectedUser:   nil,
+			expected:       nil,
 		},
 	}
 
@@ -255,11 +248,9 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			_ = json.Unmarshal([]byte(tt.requestBody), &body)
 
 			user, err := client.User.UpdateAuthenticated(context.Background(), body)
-			if tt.expectedUser != nil {
+			if tt.expected != nil {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedUser.Id, user.Id)
-				assert.Equal(t, tt.expectedUser.Name, user.Name)
-				assert.Equal(t, tt.expectedUser.Email, user.Email)
+				assert.Equal(t, tt.expected, user)
 			} else {
 				require.Error(t, err)
 			}
@@ -276,7 +267,7 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 		opts           *ListOptions
 		responseStatus int
 		responseBody   string
-		expectedUsers  []*User
+		expected       []*User
 		expectedQuery  string
 	}{
 		{
@@ -287,7 +278,7 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			opts:           &ListOptions{Page: 2, PerPage: 50},
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"login":"follower1"},{"id":2,"login":"follower2"}]`,
-			expectedUsers: []*User{
+			expected: []*User{
 				{Id: 1, Login: "follower1"},
 				{Id: 2, Login: "follower2"},
 			},
@@ -301,7 +292,7 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			opts:           &ListOptions{Page: 1, PerPage: 30},
 			responseStatus: http.StatusOK,
 			responseBody:   `[]`,
-			expectedUsers:  []*User{},
+			expected:       []*User{},
 			expectedQuery:  "page=1&per_page=30",
 		},
 	}
@@ -327,12 +318,9 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			followers, resp, err := client.User.ListAuthenticatedUserFollowers(context.Background(), tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			if len(tt.expectedUsers) > 0 {
-				assert.Len(t, followers, len(tt.expectedUsers))
-				for i := range followers {
-					assert.Equal(t, tt.expectedUsers[i].Id, followers[i].Id)
-					assert.Equal(t, tt.expectedUsers[i].Login, followers[i].Login)
-				}
+			if len(tt.expected) > 0 {
+				assert.Len(t, followers, len(tt.expected))
+				assert.Equal(t, tt.expected, followers)
 			} else {
 				assert.Empty(t, followers)
 			}

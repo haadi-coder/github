@@ -303,11 +303,7 @@ func TestBuildErrorResponse(t *testing.T) {
 
 				if len(tt.expectedErrors) > 0 {
 					assert.Equal(t, len(tt.expectedErrors), len(e.Errors))
-					for i := range tt.expectedErrors {
-						assert.Equal(t, tt.expectedErrors[i].Code, e.Errors[i].Code)
-						assert.Equal(t, tt.expectedErrors[i].Resource, e.Errors[i].Resource)
-						assert.Equal(t, tt.expectedErrors[i].Field, e.Errors[i].Field)
-					}
+					assert.Equal(t, tt.expectedErrors, e.Errors)
 				} else {
 					assert.Empty(t, e.Errors)
 				}

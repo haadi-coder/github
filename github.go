@@ -86,14 +86,14 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 
 		err := json.NewEncoder(payload).Encode(body)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("request body parsing error: %w", err)
 		}
 	}
 
 	url := fmt.Sprintf("%s/%s", c.baseUrl.String(), path)
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	req.Header.Set("Accept", acceptHeader)
@@ -127,10 +127,10 @@ type ErrorResponse struct {
 	DocumentationUrl string `json:"documentation_url,omitempty"`
 
 	Errors []struct {
-		Code     string `json:"code"`
-		Resource string `json:"resource"`
-		Field    string `json:"field"`
-	}
+		Code     string
+		Resource string
+		Field    string
+	} `json:"errors,omitempty"`
 }
 
 func (e *ErrorResponse) Error() string {

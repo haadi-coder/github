@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,13 +16,13 @@ import (
 
 func TestIssuesService_Get(t *testing.T) {
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		issueNum       int
-		expectedUrl    string
-		responseBody   string
-		expectedResult *Issue
+		name         string
+		owner        string
+		repoName     string
+		issueNum     int
+		expectedUrl  string
+		responseBody string
+		expected     *Issue
 	}{
 		{
 			name:        "Issue get",
@@ -48,7 +47,7 @@ func TestIssuesService_Get(t *testing.T) {
                 "created_at": "2023-10-10T12:00:00Z",
                 "updated_at": "2023-10-11T14:30:00Z"
             }`,
-			expectedResult: &Issue{
+			expected: &Issue{
 				Id:            1,
 				Url:           "https://api.github.com/repos/octocat/Hello-World/issues/1",
 				RepositoryUrl: "https://api.github.com/repos/octocat/Hello-World",
@@ -80,41 +79,26 @@ func TestIssuesService_Get(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithRequestHook(func(r *http.Request) {
-				fmt.Print(r.URL)
-			}))
+			client := NewClient(WithBaseURl(ts.URL))
 
 			issue, err := client.Issues.Get(context.Background(), tt.owner, tt.repoName, tt.issueNum)
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
-			assert.Equal(t, tt.expectedResult.Id, issue.Id)
-			assert.Equal(t, tt.expectedResult.Title, issue.Title)
-			assert.Equal(t, tt.expectedResult.User.Login, issue.User.Login)
-			assert.Equal(t, tt.expectedResult.Assignee.Login, issue.Assignee.Login)
-			assert.Equal(t, tt.expectedResult.Assignees[0].Login, issue.Assignees[0].Login)
-			assert.Equal(t, tt.expectedResult.Locked, issue.Locked)
-			assert.Equal(t, tt.expectedResult.Comments, issue.Comments)
-
-			if tt.expectedResult.CreatedAt != nil {
-				assert.Equal(t, tt.expectedResult.CreatedAt.Format(time.RFC3339), issue.CreatedAt.Format(time.RFC3339))
-			}
-			if tt.expectedResult.UpdatedAt != nil {
-				assert.Equal(t, tt.expectedResult.UpdatedAt.Format(time.RFC3339), issue.UpdatedAt.Format(time.RFC3339))
-			}
+			assert.Equal(t, tt.expected, issue)
 		})
 	}
 }
 
 func TestIssuesService_Create(t *testing.T) {
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		body           *IssueCreateRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *Issue
+		name         string
+		owner        string
+		repoName     string
+		body         *IssueCreateRequest
+		expectedUrl  string
+		responseBody string
+		expected     *Issue
 	}{
 		{
 			name:     "Create Issue",
@@ -134,7 +118,7 @@ func TestIssuesService_Create(t *testing.T) {
                 "user": {"id": 583231, "login": "octocat"},
                 "created_at": "2023-10-10T12:00:00Z"
             }`,
-			expectedResult: &Issue{
+			expected: &Issue{
 				Id:        1,
 				Title:     "New Issue",
 				Body:      "New Body",
@@ -169,25 +153,21 @@ func TestIssuesService_Create(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
-			assert.Equal(t, tt.expectedResult.Id, issue.Id)
-			assert.Equal(t, tt.expectedResult.Title, issue.Title)
-			assert.Equal(t, tt.expectedResult.Body, issue.Body)
-			assert.Equal(t, tt.expectedResult.Labels[0].Name, issue.Labels[0].Name)
-			assert.Equal(t, tt.expectedResult.User.Login, issue.User.Login)
+			assert.Equal(t, tt.expected, issue)
 		})
 	}
 }
 
 func TestIssuesService_Update(t *testing.T) {
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		issueNum       int
-		body           *IssueUpdateRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *Issue
+		name         string
+		owner        string
+		repoName     string
+		issueNum     int
+		body         *IssueUpdateRequest
+		expectedUrl  string
+		responseBody string
+		expected     *Issue
 	}{
 		{
 			name:     "Update Issue",
@@ -207,7 +187,7 @@ func TestIssuesService_Update(t *testing.T) {
                 "labels": [{"id": 2, "name": "enhancement"}],
                 "updated_at": "2023-10-12T15:00:00Z"
             }`,
-			expectedResult: &Issue{
+			expected: &Issue{
 				Id:        1,
 				Title:     "Updated Title",
 				State:     "closed",
@@ -241,10 +221,7 @@ func TestIssuesService_Update(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
-			assert.Equal(t, tt.expectedResult.Id, issue.Id)
-			assert.Equal(t, tt.expectedResult.Title, issue.Title)
-			assert.Equal(t, tt.expectedResult.State, issue.State)
-			assert.Equal(t, tt.expectedResult.Labels[0].Name, issue.Labels[0].Name)
+			assert.Equal(t, tt.expected, issue)
 		})
 	}
 }
@@ -321,13 +298,13 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 	state := "open"
 	assignee := "octocat"
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		opts           *IssueListOptions
-		expectedUrl    string
-		responseBody   string
-		expectedResult []*Issue
+		name         string
+		owner        string
+		repoName     string
+		opts         *IssueListOptions
+		expectedUrl  string
+		responseBody string
+		expected     []*Issue
 	}{
 		{
 			name:     "Issue list with filtering",
@@ -341,7 +318,7 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 			},
 			expectedUrl:  "/repos/octocat/Hello-World/issues?assignee=octocat&labels=enhancement&page=1&per_page=30&state=open",
 			responseBody: `[{"id":1,"title":"Issue 1"},{"id":2,"title":"Issue 2"}]`,
-			expectedResult: []*Issue{
+			expected: []*Issue{
 				{Id: 1, Title: "Issue 1"},
 				{Id: 2, Title: "Issue 2"},
 			},
@@ -365,25 +342,23 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 			issues, _, err := client.Issues.ListByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, issues)
-			assert.Len(t, issues, len(tt.expectedResult))
-			for i := range issues {
-				assert.Equal(t, tt.expectedResult[i].Id, issues[i].Id)
-				assert.Equal(t, tt.expectedResult[i].Title, issues[i].Title)
-			}
+			assert.Len(t, issues, len(tt.expected))
+
+			assert.Equal(t, tt.expected, issues)
 		})
 	}
 }
 
 func TestIssuesService_CreateComment(t *testing.T) {
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		issueNum       int
-		body           IssueCommentRequest
-		expectedUrl    string
-		responseBody   string
-		expectedResult *IssueComment
+		name         string
+		owner        string
+		repoName     string
+		issueNum     int
+		body         IssueCommentRequest
+		expectedUrl  string
+		responseBody string
+		expected     *IssueComment
 	}{
 		{
 			name:        "Comment creating",
@@ -398,7 +373,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
                 "user": {"id": 583231, "login": "octocat"},
                 "created_at": "2023-10-10T12:00:00Z"
             }`,
-			expectedResult: &IssueComment{
+			expected: &IssueComment{
 				Id:        1,
 				Body:      "New comment",
 				User:      &User{Id: 583231, Login: "octocat"},
@@ -431,22 +406,20 @@ func TestIssuesService_CreateComment(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, comment)
 
-			assert.Equal(t, tt.expectedResult.Id, comment.Id)
-			assert.Equal(t, tt.expectedResult.Body, comment.Body)
-			assert.Equal(t, tt.expectedResult.User.Login, comment.User.Login)
+			assert.Equal(t, tt.expected, comment)
 		})
 	}
 }
 
 func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 	tests := []struct {
-		name           string
-		owner          string
-		repoName       string
-		opts           *IssueCommentListOptions
-		expectedUrl    string
-		responseBody   string
-		expectedResult []*IssueComment
+		name         string
+		owner        string
+		repoName     string
+		opts         *IssueCommentListOptions
+		expectedUrl  string
+		responseBody string
+		expected     []*IssueComment
 	}{
 		{
 			name:     "Comments list",
@@ -458,7 +431,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 			},
 			expectedUrl:  "/repos/octocat/Hello-World/issues/comments?page=1&per_page=30&since=2023-10-10T12:00:00Z",
 			responseBody: `[{"id":1,"body":"Comment 1"},{"id":2,"body":"Comment 2"}]`,
-			expectedResult: []*IssueComment{
+			expected: []*IssueComment{
 				{Id: 1, Body: "Comment 1"},
 				{Id: 2, Body: "Comment 2"},
 			},
@@ -482,11 +455,8 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 			comments, _, err := client.Issues.ListCommentsByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, comments)
-			assert.Len(t, comments, len(tt.expectedResult))
-			for i := range comments {
-				assert.Equal(t, tt.expectedResult[i].Id, comments[i].Id)
-				assert.Equal(t, tt.expectedResult[i].Body, comments[i].Body)
-			}
+			assert.Len(t, comments, len(tt.expected))
+			assert.Equal(t, tt.expected, comments)
 		})
 	}
 }

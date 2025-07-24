@@ -42,7 +42,7 @@ func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	pr := new(PullRequest)
@@ -68,7 +68,7 @@ func (s *PullRequestsService) Create(ctx context.Context, owner string, repo str
 	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	pr := new(PullRequest)
@@ -91,7 +91,7 @@ func (s *PullRequestsService) Update(ctx context.Context, owner string, repo str
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	pr := new(PullRequest)
@@ -119,7 +119,7 @@ func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo stri
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	merge := new(Merge)
@@ -171,7 +171,7 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	prs := new([]*PullRequest)

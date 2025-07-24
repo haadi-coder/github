@@ -45,7 +45,7 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issu
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	issue := new(Issue)
@@ -70,7 +70,7 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	issue := new(Issue)
@@ -97,7 +97,7 @@ func (s *IssuesService) Update(ctx context.Context, owner string, repo string, i
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	issue := new(Issue)
@@ -116,7 +116,7 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, iss
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return fmt.Errorf("request creating error: %w", err)
+		return err
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
@@ -130,7 +130,7 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, i
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return fmt.Errorf("request creating error: %w", err)
+		return err
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
@@ -198,7 +198,7 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	issues := new([]*Issue)
@@ -228,7 +228,7 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	comment := new(IssueComment)
@@ -273,7 +273,7 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	comments := new([]*IssueComment)

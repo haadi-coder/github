@@ -83,10 +83,7 @@ func TestGetRateLimit(t *testing.T) {
 			defer resp.Body.Close()
 
 			rl := getRateLimit(resp)
-			assert.Equal(t, tt.expectedRateLimit.Limit, rl.Limit)
-			assert.Equal(t, tt.expectedRateLimit.Remaining, rl.Remaining)
-			assert.Equal(t, tt.expectedRateLimit.Used, rl.Used)
-			assert.Equal(t, tt.expectedRateLimit.Reset, rl.Reset)
+			assert.Equal(t, tt.expectedRateLimit, rl)
 		})
 	}
 }
@@ -121,14 +118,5 @@ func TestRateLimitService_Get(t *testing.T) {
 		Rate: &RateLimit{Limit: 100, Remaining: 50, Used: 50, Reset: 1717029203},
 	}
 
-	assert.Equal(t, expectedResult.Resources.Core.Limit, result.Resources.Core.Limit)
-	assert.Equal(t, expectedResult.Resources.Core.Remaining, result.Resources.Core.Remaining)
-	assert.Equal(t, expectedResult.Resources.Core.Used, result.Resources.Core.Used)
-	assert.Equal(t, expectedResult.Resources.Core.Reset, result.Resources.Core.Reset)
-
-	assert.Equal(t, expectedResult.Rate.Limit, result.Rate.Limit)
-	assert.Equal(t, expectedResult.Rate.Remaining, result.Rate.Remaining)
-	assert.Equal(t, expectedResult.Rate.Used, result.Rate.Used)
-	assert.Equal(t, expectedResult.Rate.Reset, result.Rate.Reset)
-
+	assert.Equal(t, expectedResult, result)
 }

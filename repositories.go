@@ -19,6 +19,7 @@ type Repository struct {
 	Private         bool       `json:"private"`
 	HtmlUrl         string     `json:"html_url"`
 	Description     string     `json:"description"`
+	
 	Fork            bool       `json:"fork"`
 	Url             string     `json:"url"`
 	CloneUrl        string     `json:"clone_url"`
@@ -50,6 +51,21 @@ type Repository struct {
 	}
 }
 
+func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
+	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r := new(Repository)
+	if _, err = s.client.Do(ctx, req, r); err != nil {
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+	}
+
+	return r, nil
+}
+
 type RepositoryUpdateRequest struct {
 	Name                      string `json:"name,omitempty"`
 	Description               string `json:"description,omitempty"`
@@ -76,26 +92,11 @@ type RepositoryUpdateRequest struct {
 	AllowForking              bool   `json:"allow_forking,omitempty"`
 }
 
-func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
-	path := fmt.Sprintf("repos/%s/%s", owner, repo)
-	req, err := s.client.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
-	}
-
-	r := new(Repository)
-	if _, err = s.client.Do(ctx, req, r); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
-	}
-
-	return r, nil
-}
-
 func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	r := new(Repository)
@@ -110,7 +111,7 @@ func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo str
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return fmt.Errorf("request creating error: %w", err)
+		return err
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
@@ -150,7 +151,7 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 	path := "user/repos"
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	repo := new(Repository)
@@ -195,7 +196,7 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	repos := new([]*Repository)
@@ -227,7 +228,7 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	contributors := new([]*User)

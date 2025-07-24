@@ -36,7 +36,7 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, error) 
 	path := fmt.Sprintf("users/%s", username)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	user := new(User)
@@ -51,7 +51,7 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 	path := "user"
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	user := new(User)
@@ -86,7 +86,7 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	users := new([]*User)
@@ -113,7 +113,7 @@ func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateR
 	path := "user"
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, err
 	}
 
 	user := new(User)
@@ -138,7 +138,7 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	users := new([]*User)
@@ -164,7 +164,7 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request creating error: %w", err)
+		return nil, nil, err
 	}
 
 	users := new([]*User)
@@ -181,7 +181,7 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 
 	req, err := s.client.NewRequest(http.MethodPut, path, nil)
 	if err != nil {
-		return fmt.Errorf("request creating error: %w", err)
+		return err
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
@@ -196,7 +196,7 @@ func (s *UsersService) Unfollow(ctx context.Context, username string) error {
 
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return fmt.Errorf("request creating error: %w", err)
+		return err
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
