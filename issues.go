@@ -2,8 +2,9 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"strconv"
+	"net/url"
 	"strings"
 )
 
@@ -75,46 +76,46 @@ type Label struct {
 	Default     bool   `json:"default"`
 }
 
-func (s *IssuesService) Get(ctx context.Context, owner string, repoName string, issueNum int) (*Issue, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	req, err := s.client.NewRequest(http.MethodGet, url.String(), nil)
+func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return issue, nil
 }
 
-func (s *IssuesService) Create(ctx context.Context, owner string, repoName string, body *IssueCreateRequest) (*Issue, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues")
-	req, err := s.client.NewRequest(http.MethodPost, url.String(), body)
+func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
+	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return issue, nil
 }
 
-func (s *IssuesService) Edit(ctx context.Context, owner string, repoName string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum))
-	req, err := s.client.NewRequest(http.MethodPatch, url.String(), body)
+func (s *IssuesService) Edit(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
+	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return issue, nil
@@ -124,39 +125,39 @@ type IssueLockRequest struct {
 	LockReason string `json:"lock_reason"`
 }
 
-func (s *IssuesService) Lock(ctx context.Context, owner string, repoName string, issueNum int, body *IssueLockRequest) error {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
-	req, err := s.client.NewRequest(http.MethodPut, url.String(), body)
+func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) error {
+	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
+	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return err
+		return fmt.Errorf("request creating error: %w", err)
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+		return fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return nil
 }
 
-func (s *IssuesService) Unlock(ctx context.Context, owner string, repoName string, issueNum int) error {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "lock")
-	req, err := s.client.NewRequest(http.MethodDelete, url.String(), nil)
+func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, issueNum int) error {
+	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
+	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("request creating error: %w", err)
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+		return fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return nil
 }
 
-func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName string, opts *IssueListOptions) ([]*Issue, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues")
+func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo string, opts *IssueListOptions) ([]*Issue, *Response, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -190,19 +191,18 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repoName s
 			q.Set("direction", *opts.Direction)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	issues := new([]*Issue)
 	res, err := s.client.Do(ctx, req, issues)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *issues, res, nil
@@ -229,26 +229,26 @@ type IssueCommentListOptions struct {
 	Direction *string
 }
 
-func (s *IssuesService) CreateComment(ctx context.Context, owner string, repoName string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues", strconv.Itoa(issueNum), "comments")
-	req, err := s.client.NewRequest(http.MethodPost, url.String(), body)
+func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
+	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	comment := new(IssueComment)
 	if _, err = s.client.Do(ctx, req, comment); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return comment, nil
 }
 
-func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repoName string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "issues/comments")
+func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repo string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
+	path := fmt.Sprintf("repos/%s/%s/issues/comments", owner, repo)
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -264,19 +264,18 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 			q.Set("direction", *opts.Direction)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	comments := new([]*IssueComment)
 	res, err := s.client.Do(ctx, req, comments)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *comments, res, nil

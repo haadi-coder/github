@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -39,16 +40,15 @@ type Resources struct {
 }
 
 func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) {
-	url := s.client.baseUrl.JoinPath("rate_limit").String()
-
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	path := "rate_limit"
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	rl := new(RateLimitResponse)
 	if _, err := s.client.Do(ctx, req, rl); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return rl, nil

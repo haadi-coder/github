@@ -2,8 +2,9 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"strconv"
+	"net/url"
 )
 
 type PullRequestsService struct {
@@ -78,71 +79,71 @@ type PullRequestListOptions struct {
 	Direction *string
 }
 
-func (s *PullRequestsService) Get(ctx context.Context, owner string, repoName string, pullNum int) (*PullRequest, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "pulls", strconv.Itoa(pullNum)).String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, error) {
+	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return pr, nil
 }
 
-func (s *PullRequestsService) Create(ctx context.Context, owner string, repoName string, body *PullRequestCreateRequest) (*PullRequest, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "pulls").String()
-	req, err := s.client.NewRequest(http.MethodPost, url, body)
+func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, error) {
+	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
+	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return pr, nil
 }
 
-func (s *PullRequestsService) Update(ctx context.Context, owner string, repoName string, pullNum int, body *PullRequestUpdateRequest) (*PullRequest, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "pulls", strconv.Itoa(pullNum)).String()
-	req, err := s.client.NewRequest(http.MethodPatch, url, body)
+func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, error) {
+	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
+	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return pr, nil
 }
 
-func (s *PullRequestsService) Merge(ctx context.Context, owner string, repoName string, pullNum int, body *MergeRequest) (*Merge, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName, "pulls", strconv.Itoa(pullNum), "merge").String()
-	req, err := s.client.NewRequest(http.MethodPut, url, body)
+func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, error) {
+	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
+	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	merge := new(Merge)
 	if _, err = s.client.Do(ctx, req, merge); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return merge, nil
 }
 
-func (s *PullRequestsService) List(ctx context.Context, owner string, repoName string, opts *PullRequestListOptions) ([]*PullRequest, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "pulls")
+func (s *PullRequestsService) List(ctx context.Context, owner string, repo string, opts *PullRequestListOptions) ([]*PullRequest, *Response, error) {
+	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -163,19 +164,18 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repoName s
 			q.Set("state", *opts.State)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	prs := new([]*PullRequest)
 	res, err := s.client.Do(ctx, req, prs)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *prs, res, nil

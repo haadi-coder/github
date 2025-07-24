@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -23,9 +25,10 @@ type SearchOptions struct {
 }
 
 func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
-	rawUrl := s.client.baseUrl.JoinPath("search", "repositories")
+	path := "search/repositories"
+
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -37,29 +40,28 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 			q.Set("sort", *opts.Sort)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	rawUrl.RawQuery += "&" + buildSearchParams(sq)
-
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	path += "&" + buildSearchParams(sq)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	search := new(Search[Repository])
 	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return search, nil
 }
 
 func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], error) {
-	rawUrl := s.client.baseUrl.JoinPath("search", "users")
+	path := "search/users"
+
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -70,21 +72,18 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 		if opts.Sort != nil {
 			q.Set("sort", *opts.Sort)
 		}
-
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	rawUrl.RawQuery += "&" + buildSearchParams(sq)
-
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	path += "&" + buildSearchParams(sq)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	search := new(Search[User])
 	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return search, nil

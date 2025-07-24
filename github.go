@@ -79,7 +79,7 @@ func NewClient(opts ...option) *Client {
 	return client
 }
 
-func (c *Client) NewRequest(method, url string, body any) (*http.Request, error) {
+func (c *Client) NewRequest(method, path string, body any) (*http.Request, error) {
 	var payload io.ReadWriter
 	if body != nil {
 		payload = &bytes.Buffer{}
@@ -90,6 +90,7 @@ func (c *Client) NewRequest(method, url string, body any) (*http.Request, error)
 		}
 	}
 
+	url := fmt.Sprintf("%s/%s", c.baseUrl.String(), path)
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return nil, err

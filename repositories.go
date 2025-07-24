@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type RepositoriesService struct {
@@ -108,70 +110,70 @@ type RepositoryListOptions struct {
 	Anon      *string
 }
 
-func (s *RepositoriesService) Get(ctx context.Context, owner string, repoName string) (*Repository, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName).String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
+	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
-	repo := new(Repository)
-	if _, err = s.client.Do(ctx, req, repo); err != nil {
-		return nil, err
+	r := new(Repository)
+	if _, err = s.client.Do(ctx, req, r); err != nil {
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
-	return repo, nil
+	return r, nil
 }
 
-func (s *RepositoriesService) Edit(ctx context.Context, owner string, repoName string, body RepositoryUpdateRequest) (*Repository, error) {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName).String()
-	req, err := s.client.NewRequest(http.MethodPatch, url, body)
+func (s *RepositoriesService) Edit(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
+	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
-	repo := new(Repository)
-	if _, err = s.client.Do(ctx, req, repo); err != nil {
-		return nil, err
+	r := new(Repository)
+	if _, err = s.client.Do(ctx, req, r); err != nil {
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
-	return repo, nil
+	return r, nil
 }
 
-func (s *RepositoriesService) Delete(ctx context.Context, owner string, repoName string) error {
-	url := s.client.baseUrl.JoinPath("repos", owner, repoName).String()
-	req, err := s.client.NewRequest(http.MethodDelete, url, nil)
+func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) error {
+	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("request creating error: %w", err)
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+		return fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return nil
 }
 
 func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateRequest) (*Repository, error) {
-	url := s.client.baseUrl.JoinPath("user", "repos").String()
-	req, err := s.client.NewRequest(http.MethodPost, url, body)
+	path := "user/repos"
+	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	repo := new(Repository)
 	if _, err = s.client.Do(ctx, req, repo); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return repo, nil
 }
 
 func (s *RepositoriesService) List(ctx context.Context, owner string, opts *RepositoryListOptions) ([]*Repository, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("users", owner, "repos")
+	path := fmt.Sprintf("users/%s/repos", owner)
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -186,29 +188,28 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 			q.Set("direction", *opts.Direction)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	repos := new([]*Repository)
 	res, err := s.client.Do(ctx, req, repos)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *repos, res, nil
 }
 
-func (s *RepositoriesService) ListContributors(ctx context.Context, owner string, repoName string, opts *RepositoryListOptions) ([]*User, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("repos", owner, repoName, "contributors")
+func (s *RepositoriesService) ListContributors(ctx context.Context, owner string, repo string, opts *RepositoryListOptions) ([]*User, *Response, error) {
+	path := fmt.Sprintf("repos/%s/%s/contributors", owner, repo)
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
@@ -217,19 +218,18 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 			q.Set("anon", *opts.Anon)
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	contributors := new([]*User)
 	res, err := s.client.Do(ctx, req, contributors)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *contributors, res, nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 type UsersService struct {
@@ -47,41 +48,40 @@ type UsersListOptions struct {
 }
 
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
-	url := s.client.baseUrl.JoinPath("users/", username).String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	path := fmt.Sprintf("users/%s", username)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return user, nil
 }
 
 func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
-	url := s.client.baseUrl.JoinPath("user").String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	path := "user"
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return user, nil
 }
 
 func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*User, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("users")
+	path := "users"
 
 	if opts != nil {
-		q := rawUrl.Query()
-
+		q := url.Values{}
 		if opts.ListOptions != nil {
 			opts.paginateQuery(q)
 		}
@@ -89,110 +89,109 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 			q.Set("since", fmt.Sprintf("%d", opts.Since))
 		}
 
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *users, res, nil
 }
 
 func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
-	url := s.client.baseUrl.JoinPath("user").String()
-	req, err := s.client.NewRequest(http.MethodPatch, url, body)
+	path := "user"
+	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return user, nil
 }
 
 func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("user", "followers")
+	path := "user/followers"
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 		opts.paginateQuery(q)
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *users, res, nil
 }
 
 func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
-	rawUrl := s.client.baseUrl.JoinPath("user/following")
+	path := "user/following"
 
 	if opts != nil {
-		q := rawUrl.Query()
+		q := url.Values{}
 		opts.paginateQuery(q)
-		rawUrl.RawQuery = q.Encode()
+		path += "?" + q.Encode()
 	}
 
-	url := rawUrl.String()
-	req, err := s.client.NewRequest(http.MethodGet, url, nil)
+	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("request creating error: %w", err)
 	}
 
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, err
+		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return *users, res, nil
 }
 
 func (s *UsersService) Follow(ctx context.Context, username string) error {
-	url := s.client.baseUrl.JoinPath("user", "following", username).String()
-	req, err := s.client.NewRequest(http.MethodPut, url, nil)
+	path := fmt.Sprintf("user/following/%s", username)
+
+	req, err := s.client.NewRequest(http.MethodPut, path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("request creating error: %w", err)
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+		return fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return nil
 }
 
 func (s *UsersService) Unfollow(ctx context.Context, username string) error {
-	url := s.client.baseUrl.JoinPath("user", "following", username).String()
-	req, err := s.client.NewRequest(http.MethodDelete, url, nil)
+	path := fmt.Sprintf("user/following/%s", username)
+
+	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("request creating error: %w", err)
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+		return fmt.Errorf("repsponse parsing error: %w", err)
 	}
 
 	return nil
