@@ -20,20 +20,22 @@ type RateLimit struct {
 }
 
 type RateLimitResponse struct {
-	Resources struct {
-		Core                      *RateLimit
-		Search                    *RateLimit
-		Graphql                   *RateLimit
-		IntegrationManifest       *RateLimit
-		SourceImport              *RateLimit
-		CodeScanningUpload        *RateLimit
-		ActionsRunnerRegistration *RateLimit
-		Scim                      *RateLimit
-		DependencySnapshots       *RateLimit
-		CodeSearch                *RateLimit
-		CodeScanningAutofix       *RateLimit
-	}
-	Rate *RateLimit
+	Resources *Resources
+	Rate      *RateLimit
+}
+
+type Resources struct {
+	Core                      *RateLimit
+	Search                    *RateLimit
+	Graphql                   *RateLimit
+	IntegrationManifest       *RateLimit
+	SourceImport              *RateLimit
+	CodeScanningUpload        *RateLimit
+	ActionsRunnerRegistration *RateLimit
+	Scim                      *RateLimit
+	DependencySnapshots       *RateLimit
+	CodeSearch                *RateLimit
+	CodeScanningAutofix       *RateLimit
 }
 
 func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) {
