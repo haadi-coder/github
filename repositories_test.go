@@ -108,7 +108,8 @@ func TestRepositoriesService_Get(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
 			repo, err := client.Repositories.Get(context.Background(), tt.owner, tt.repoName)
 			if tt.expectError {
@@ -184,7 +185,8 @@ func TestRepositoriesService_Create(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
 			repo, err := client.Repositories.Create(context.Background(), tt.body)
 			if tt.expectError {
@@ -263,7 +265,8 @@ func TestRepositoriesService_Update(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
 			repo, err := client.Repositories.Update(context.Background(), tt.owner, tt.repoName, tt.body)
 			if tt.expectError {
@@ -317,9 +320,10 @@ func TestRepositoriesService_Delete(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
-			err := client.Repositories.Delete(context.Background(), tt.owner, tt.repoName)
+			err = client.Repositories.Delete(context.Background(), tt.owner, tt.repoName)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -385,7 +389,8 @@ func TestRepositoriesService_List(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
 			repos, _, err := client.Repositories.List(context.Background(), tt.owner, tt.opts)
 			if tt.expectError {
@@ -458,7 +463,8 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			require.NoError(t, err)
 
 			users, _, err := client.Repositories.ListContributors(context.Background(), tt.owner, tt.repoName, tt.opts)
 			if tt.expectError {

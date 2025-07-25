@@ -64,7 +64,8 @@ func TestPullRequestsService_Get(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			pr, err := client.PullRequests.Get(context.Background(), tt.owner, tt.repoName, tt.pullNum)
 			require.NoError(t, err)
@@ -136,7 +137,8 @@ func TestPullRequestsService_Create(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			pr, err := client.PullRequests.Create(context.Background(), tt.owner, tt.repoName, tt.body)
 			require.NoError(t, err)
@@ -208,7 +210,8 @@ func TestPullRequestsService_Update(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			pr, err := client.PullRequests.Update(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
@@ -274,7 +277,8 @@ func TestPullRequestsService_Merge(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			merge, err := client.PullRequests.Merge(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
@@ -360,7 +364,8 @@ func TestPullRequestsService_List(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			prs, _, err := client.PullRequests.List(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)

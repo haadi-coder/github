@@ -47,7 +47,8 @@ func TestUsersService_Get(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			user, err := client.User.Get(context.Background(), "testuser")
 			if tt.expected != nil {
@@ -109,7 +110,8 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			require.NoError(t, err)
 
 			user, err := client.User.GetAuthenticated(context.Background())
 			if tt.expected != nil {
@@ -171,7 +173,8 @@ func TestUsersService_List(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURl(ts.URL))
+			require.NoError(t, err)
 
 			userList, resp, err := client.User.List(context.Background(), tt.opts)
 			require.NoError(t, err)
@@ -242,7 +245,8 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			require.NoError(t, err)
 
 			var body UserUpdateRequest
 			_ = json.Unmarshal([]byte(tt.requestBody), &body)
@@ -313,7 +317,8 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			require.NoError(t, err)
 
 			followers, resp, err := client.User.ListAuthenticatedUserFollowers(context.Background(), tt.opts)
 			require.NoError(t, err)
@@ -380,9 +385,9 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			client, err := NewClient(WithBaseURl(ts.URL), WithToken(tt.token))
+			require.NoError(t, err)
 
-			var err error
 			if tt.isFollow {
 				err = client.User.Follow(context.Background(), "testuser")
 			} else {

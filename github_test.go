@@ -81,10 +81,11 @@ func TestWaitRateLimit(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			client := NewClient(
+			client, err := NewClient(
 				WithRetryWaitMin(tc.retryWaitMin),
 				WithRetryWaitMax(tc.retryWaitMax),
 			)
+			require.NoError(t, err)
 
 			start := time.Now()
 			client.waitRateLimit(tc.rl, tc.attempt)
@@ -507,7 +508,7 @@ func TestDo(t *testing.T) {
 			ts := tt.setupServer()
 			defer ts.Close()
 
-			client := NewClient()
+			client, err := NewClient()
 			client.baseURL, _ = url.Parse(ts.URL)
 			tt.setupClient(client)
 

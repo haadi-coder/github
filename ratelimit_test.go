@@ -105,8 +105,9 @@ func TestRateLimitService_Get(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client := NewClient(WithBaseURl(ts.URL))
-
+	client, err := NewClient(WithBaseURl(ts.URL))
+	require.NoError(t, err)
+	
 	result, err := client.RateLimit.Get(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, result)

@@ -49,11 +49,11 @@ const (
 	linkLast  = "last"
 )
 
-func NewClient(opts ...option) *Client {
-	parsed, _ := url.Parse(defaultBaseURL)
+func NewClient(opts ...option) (*Client, error) {
+	baseURL, _ := url.Parse(defaultBaseURL)
 	client := &Client{
 		client:       http.DefaultClient,
-		baseURL:      parsed,
+		baseURL:      baseURL,
 		userAgent:    userAgentHeader,
 		retryMax:     defaultRetryMax,
 		retryWaitMin: defaultWaitMin,
@@ -61,7 +61,10 @@ func NewClient(opts ...option) *Client {
 	}
 
 	for _, opt := range opts {
-		opt(client)
+		err := opt(client)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	client.User = &UsersService{client}
@@ -71,7 +74,7 @@ func NewClient(opts ...option) *Client {
 	client.Search = &SearchService{client}
 	client.RateLimit = &RateLimitService{client}
 
-	return client
+	return client, nil
 }
 
 func (c *Client) NewRequest(method, path string, body any) (*http.Request, error) {
@@ -85,7 +88,11 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 		}
 	}
 
-	url, _ := c.baseURL.Parse(path)
+	url, err := c.baseURL.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+
 	req, err := http.NewRequest(method, url.String(), payload)
 	if err != nil {
 		return nil, fmt.Errorf("request creating error: %w", err)
