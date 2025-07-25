@@ -3,6 +3,7 @@ package github
 import (
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type option func(*Client)
@@ -15,7 +16,7 @@ func WithToken(t string) option {
 
 func WithHTTPClient(hc *http.Client) option {
 	return func(c *Client) {
-		c.hc = hc
+		c.client = hc
 	}
 }
 
@@ -23,7 +24,7 @@ func WithBaseURl(u string) option {
 	return func(c *Client) {
 		parsed, err := url.Parse(u)
 		if err == nil {
-			c.baseUrl = parsed
+			c.baseURL = parsed
 		}
 	}
 }
@@ -46,13 +47,13 @@ func WithRetryMax(rc int) option {
 	}
 }
 
-func WithRetryWaitMin(rwMin float64) option {
+func WithRetryWaitMin(rwMin time.Duration) option {
 	return func(c *Client) {
 		c.retryWaitMin = rwMin
 	}
 }
 
-func WithRetryWaitMax(rwMax float64) option {
+func WithRetryWaitMax(rwMax time.Duration) option {
 	return func(c *Client) {
 		c.retryWaitMax = rwMax
 	}

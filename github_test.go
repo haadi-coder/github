@@ -18,16 +18,16 @@ import (
 func TestWaitRateLimit(t *testing.T) {
 	cases := []struct {
 		name         string
-		retryWaitMin int
-		retryWaitMax int
+		retryWaitMin time.Duration
+		retryWaitMax time.Duration
 		rl           *RateLimit
 		attempt      int
 		expectedWait time.Duration
 	}{
 		{
 			name:         "Reset в будущем",
-			retryWaitMin: 5,
-			retryWaitMax: 60,
+			retryWaitMin: 5 * time.Second,
+			retryWaitMax: 60 * time.Second,
 			rl: &RateLimit{
 				Reset: time.Now().Add(10 * time.Second).Unix(),
 			},
@@ -36,8 +36,8 @@ func TestWaitRateLimit(t *testing.T) {
 		},
 		{
 			name:         "Reset в прошлом",
-			retryWaitMin: 5,
-			retryWaitMax: 60,
+			retryWaitMin: 5 * time.Second,
+			retryWaitMax: 60 * time.Second,
 			rl: &RateLimit{
 				Reset: time.Now().Add(-10 * time.Second).Unix(),
 			},
@@ -46,27 +46,27 @@ func TestWaitRateLimit(t *testing.T) {
 		},
 		{
 			name:         "Reset == 0, attempt=0",
-			retryWaitMin: 5,
-			retryWaitMax: 60,
+			retryWaitMin: 5 * time.Second,
+			retryWaitMax: 60 * time.Second,
 			rl:           &RateLimit{Reset: 0},
 			attempt:      0,
 			expectedWait: 5 * time.Second, // 5 * 2^0 = 5
 		},
 		{
 			name:         "Reset == 0, attempt=1",
-			retryWaitMin: 5,
-			retryWaitMax: 60,
+			retryWaitMin: 5 * time.Second,
+			retryWaitMax: 60 * time.Second,
 			rl:           &RateLimit{Reset: 0},
 			attempt:      1,
 			expectedWait: 10 * time.Second, // 5 * 2^1 = 10
 		},
 		{
 			name:         "Reset == 0, attempt=100 (ограничение retryWaitMax)",
-			retryWaitMin: 5,
-			retryWaitMax: 10,
+			retryWaitMin: 5 * time.Second,
+			retryWaitMax: 20 * time.Second,
 			rl:           &RateLimit{Reset: 0},
 			attempt:      100,
-			expectedWait: 10 * time.Second, // max = 60
+			expectedWait: 20 * time.Second, // max = 10
 		},
 		{
 			name:         "Reset == 0, retryWaitMin по умолчанию",
@@ -82,8 +82,8 @@ func TestWaitRateLimit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			client := NewClient(
-				WithRetryWaitMin(float64(tc.retryWaitMin)),
-				WithRetryWaitMax(float64(tc.retryWaitMax)),
+				WithRetryWaitMin(tc.retryWaitMin),
+				WithRetryWaitMax(tc.retryWaitMax),
 			)
 
 			start := time.Now()
@@ -293,11 +293,11 @@ func TestBuildErrorResponse(t *testing.T) {
 				}
 			}
 
-			err := buildErrorResponse(hr)
+			err := ApiError(hr)
 
 			if !tt.expectedErrIsNil {
 				assert.Error(t, err)
-				e := err.(*ErrorResponse)
+				e := err.(*APIError)
 				assert.Equal(t, tt.expectedMsg, e.Message)
 				assert.Equal(t, tt.expectedDocUrl, e.DocumentationUrl)
 
@@ -378,7 +378,7 @@ func TestDo(t *testing.T) {
 			wantStatusCode: http.StatusTooManyRequests,
 			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
 				require.Error(t, err)
-				errorResp, ok := err.(*ErrorResponse)
+				errorResp, ok := err.(*APIError)
 				require.True(t, ok)
 				assert.Equal(t, http.StatusTooManyRequests, errorResp.StatusCode)
 				assert.Equal(t, "Too Many Requests", errorResp.Message)
@@ -508,7 +508,7 @@ func TestDo(t *testing.T) {
 			defer ts.Close()
 
 			client := NewClient()
-			client.baseUrl, _ = url.Parse(ts.URL)
+			client.baseURL, _ = url.Parse(ts.URL)
 			tt.setupClient(client)
 
 			req, err := client.NewRequest("GET", ts.URL, nil)

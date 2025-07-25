@@ -21,11 +21,11 @@ type RateLimit struct {
 }
 
 type RateLimitResponse struct {
-	Resources *Resources
+	Resources *RateLimitResources
 	Rate      *RateLimit
 }
 
-type Resources struct {
+type RateLimitResources struct {
 	Core                      *RateLimit
 	Search                    *RateLimit
 	Graphql                   *RateLimit
@@ -38,6 +38,13 @@ type Resources struct {
 	CodeSearch                *RateLimit
 	CodeScanningAutofix       *RateLimit
 }
+
+const (
+	rateLimitHeader    = "X-RateLimit-Limit"
+	rateRemainigHeader = "X-RateLimit-Remaining"
+	rateResetHeader    = "X-RateLimit-Reset"
+	rateUsedHeader     = "X-RateLimit-Used"
+)
 
 func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) {
 	path := "rate_limit"
@@ -75,22 +82,26 @@ func getRateLimit(res *http.Response) *RateLimit {
 		}
 	}
 
-	rl.Used = rl.Limit - rl.Remaining
+	if used := res.Header.Get(rateUsedHeader); used != "" {
+		if intUsed, err := strconv.Atoi(used); err == nil {
+			rl.Used = intUsed
+		}
+	}
 
 	return &rl
 }
 
 func (c *Client) calculateBackoff(attempt int) time.Duration {
-	if c.retryWaitMin == 0 {
-		c.retryWaitMin = 5
+	if c.retryWaitMin.Seconds() == 0 {
+		c.retryWaitMin = 5 * time.Second
 	}
-	if c.retryWaitMax == 0 {
-		c.retryWaitMax = 60
+	if c.retryWaitMax.Seconds() == 0 {
+		c.retryWaitMax = 60 * time.Second
 	}
 
-	wait := c.retryWaitMin * math.Pow(2, float64(attempt))
-	if wait > c.retryWaitMax {
-		wait = c.retryWaitMax
+	wait := c.retryWaitMin.Seconds() * math.Pow(2, float64(attempt))
+	if wait > c.retryWaitMax.Seconds() {
+		wait = c.retryWaitMax.Seconds()
 	}
 
 	return time.Duration(wait * float64(time.Second))

@@ -21,6 +21,7 @@ func TestGetRateLimit(t *testing.T) {
 			headers: map[string]string{
 				rateLimitHeader:    "100",
 				rateRemainigHeader: "50",
+				rateUsedHeader:     "50",
 				rateResetHeader:    "1717029203",
 			},
 			expectedRateLimit: &RateLimit{
@@ -62,7 +63,7 @@ func TestGetRateLimit(t *testing.T) {
 			expectedRateLimit: &RateLimit{
 				Limit:     200,
 				Remaining: 0,
-				Used:      200,
+				Used:      0,
 				Reset:     0,
 			},
 		},
@@ -111,7 +112,7 @@ func TestRateLimitService_Get(t *testing.T) {
 	require.NotNil(t, result)
 
 	expectedResult := &RateLimitResponse{
-		Resources: &Resources{
+		Resources: &RateLimitResources{
 			Core:   &RateLimit{Limit: 100, Remaining: 50, Used: 50, Reset: 1717029203},
 			Search: &RateLimit{Limit: 200, Remaining: 100, Used: 100, Reset: 1717029203},
 		},

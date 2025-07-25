@@ -15,17 +15,17 @@ import (
 )
 
 type Client struct {
-	hc               *http.Client
-	baseUrl          *url.URL
+	client           *http.Client
+	baseURL          *url.URL
 	token            string
 	userAgent        string
 	rateLimitRetry   bool
+	rateLimitHandler func(*http.Response) error
 	retryMax         int
-	retryWaitMin     float64
-	retryWaitMax     float64
+	retryWaitMin     time.Duration
+	retryWaitMax     time.Duration
 	requestHook      func(*http.Request)
 	responseHook     func(*http.Response)
-	rateLimitHandler func(*http.Response) error
 
 	User         *UsersService
 	Repositories *RepositoriesService
@@ -36,17 +36,12 @@ type Client struct {
 }
 
 const (
-	defaultBaseUrl  = "https://api.github.com"
-	defaultWaitMin  = 5
-	defaultWaitMax  = 60
+	defaultBaseURL  = "https://api.github.com"
+	defaultWaitMin  = 5 * time.Second
+	defaultWaitMax  = 60 * time.Second
 	defaultRetryMax = 10
 
-	userAgentHeader    = "go-github-client/1.0"
-	acceptHeader       = "application/vnd.github.v3+json"
-	versionHeader      = "2022-11-28"
-	rateLimitHeader    = "X-RateLimit-Limit"
-	rateRemainigHeader = "X-RateLimit-Remaining"
-	rateResetHeader    = "X-RateLimit-Reset"
+	userAgentHeader = "go-github-client/1.0"
 
 	linkPrev  = "prev"
 	linkNext  = "next"
@@ -55,14 +50,18 @@ const (
 )
 
 func NewClient(opts ...option) *Client {
-	parsed, _ := url.Parse(defaultBaseUrl)
+	parsed, _ := url.Parse(defaultBaseURL)
 	client := &Client{
-		hc:           http.DefaultClient,
-		baseUrl:      parsed,
+		client:       http.DefaultClient,
+		baseURL:      parsed,
 		userAgent:    userAgentHeader,
 		retryMax:     defaultRetryMax,
 		retryWaitMin: defaultWaitMin,
 		retryWaitMax: defaultWaitMax,
+	}
+
+	for _, opt := range opts {
+		opt(client)
 	}
 
 	client.User = &UsersService{client}
@@ -71,10 +70,6 @@ func NewClient(opts ...option) *Client {
 	client.PullRequests = &PullRequestsService{client}
 	client.Search = &SearchService{client}
 	client.RateLimit = &RateLimitService{client}
-
-	for _, opt := range opts {
-		opt(client)
-	}
 
 	return client
 }
@@ -90,15 +85,15 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 		}
 	}
 
-	url := fmt.Sprintf("%s/%s", c.baseUrl.String(), path)
-	req, err := http.NewRequest(method, url, payload)
+	url, _ := c.baseURL.Parse(path)
+	req, err := http.NewRequest(method, url.String(), payload)
 	if err != nil {
 		return nil, fmt.Errorf("request creating error: %w", err)
 	}
 
-	req.Header.Set("Accept", acceptHeader)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("X-Github-Api-Version", "2022-11-28")
 	req.Header.Set("User-Agent", c.userAgent)
-	req.Header.Set("X-Github-Api-Version", versionHeader)
 
 	if payload != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -121,22 +116,6 @@ type Response struct {
 	LastPage     int
 }
 
-type ErrorResponse struct {
-	*http.Response
-	Message          string `json:"message"`
-	DocumentationUrl string `json:"documentation_url,omitempty"`
-
-	Errors []struct {
-		Code     string
-		Resource string
-		Field    string
-	} `json:"errors,omitempty"`
-}
-
-func (e *ErrorResponse) Error() string {
-	return fmt.Sprintf("API Error: %d - %s\n", e.StatusCode, e.Message)
-}
-
 func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	if c.requestHook != nil {
 		c.requestHook(req)
@@ -146,6 +125,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	var err error
 	var rateLim *RateLimit
 
+	req = req.WithContext(ctx)
+
 	maxAtm := max(c.retryMax, 1)
 	for atm := range maxAtm {
 		select {
@@ -154,7 +135,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		default:
 		}
 
-		res, err = c.hc.Do(req)
+		res, err = c.client.Do(req)
 		rateLim = getRateLimit(res)
 		if err != nil {
 			return nil, err
@@ -166,7 +147,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			if !c.rateLimitRetry {
-				return buildResponse(res, rateLim), buildErrorResponse(res)
+				return buildResponse(res, rateLim), ApiError(res)
 			}
 
 			if c.rateLimitHandler != nil {
@@ -186,7 +167,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	response := buildResponse(res, rateLim)
 
 	if res.StatusCode >= 400 {
-		return response, buildErrorResponse(res)
+		return response, ApiError(res)
 	}
 
 	if v != nil {
@@ -218,22 +199,6 @@ func buildResponse(hr *http.Response, rl *RateLimit) *Response {
 	}
 
 	return res
-}
-
-func buildErrorResponse(hr *http.Response) error {
-	if hr == nil {
-		return errors.New("received nil response")
-	}
-
-	errResponse := &ErrorResponse{
-		Response: hr,
-	}
-
-	if err := json.NewDecoder(hr.Body).Decode(errResponse); err != nil {
-		errResponse.Message = fmt.Sprintf("Request failed with status %d", hr.StatusCode)
-	}
-
-	return errResponse
 }
 
 func parseLinkHeader(res *Response, link string) error {
