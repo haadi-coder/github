@@ -47,7 +47,7 @@ func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return pr, nil
@@ -73,7 +73,7 @@ func (s *PullRequestsService) Create(ctx context.Context, owner string, repo str
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return pr, nil
@@ -96,7 +96,7 @@ func (s *PullRequestsService) Update(ctx context.Context, owner string, repo str
 
 	pr := new(PullRequest)
 	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return pr, nil
@@ -124,7 +124,7 @@ func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo stri
 
 	merge := new(Merge)
 	if _, err = s.client.Do(ctx, req, merge); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return merge, nil
@@ -177,7 +177,7 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 	prs := new([]*PullRequest)
 	res, err := s.client.Do(ctx, req, prs)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *prs, res, nil

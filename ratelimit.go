@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -55,7 +54,7 @@ func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) 
 
 	rl := new(RateLimitResponse)
 	if _, err := s.client.Do(ctx, req, rl); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return rl, nil

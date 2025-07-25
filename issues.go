@@ -50,7 +50,7 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issu
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return issue, nil
@@ -75,7 +75,7 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return issue, nil
@@ -102,7 +102,7 @@ func (s *IssuesService) Update(ctx context.Context, owner string, repo string, i
 
 	issue := new(Issue)
 	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return issue, nil
@@ -120,7 +120,7 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, iss
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return fmt.Errorf("repsponse parsing error: %w", err)
+		return err
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, i
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return fmt.Errorf("repsponse parsing error: %w", err)
+		return err
 	}
 
 	return nil
@@ -204,7 +204,7 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 	issues := new([]*Issue)
 	res, err := s.client.Do(ctx, req, issues)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *issues, res, nil
@@ -233,7 +233,7 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 
 	comment := new(IssueComment)
 	if _, err = s.client.Do(ctx, req, comment); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return comment, nil
@@ -279,7 +279,7 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 	comments := new([]*IssueComment)
 	res, err := s.client.Do(ctx, req, comments)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *comments, res, nil

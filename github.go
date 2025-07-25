@@ -41,7 +41,7 @@ const (
 	defaultWaitMax  = 60 * time.Second
 	defaultRetryMax = 10
 
-	userAgentHeader = "go-github-client/1.0"
+	userAgent = "go-github-client/1.0"
 
 	linkPrev  = "prev"
 	linkNext  = "next"
@@ -54,15 +54,14 @@ func NewClient(opts ...option) (*Client, error) {
 	client := &Client{
 		client:       http.DefaultClient,
 		baseURL:      baseURL,
-		userAgent:    userAgentHeader,
+		userAgent:    userAgent,
 		retryMax:     defaultRetryMax,
 		retryWaitMin: defaultWaitMin,
 		retryWaitMax: defaultWaitMax,
 	}
 
 	for _, opt := range opts {
-		err := opt(client)
-		if err != nil {
+		if err := opt(client); err != nil {
 			return nil, err
 		}
 	}
@@ -84,7 +83,7 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 
 		err := json.NewEncoder(payload).Encode(body)
 		if err != nil {
-			return nil, fmt.Errorf("request body parsing error: %w", err)
+			return nil, fmt.Errorf("failed to encode JSON: %w", err)
 		}
 	}
 
@@ -95,7 +94,7 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 
 	req, err := http.NewRequest(method, url.String(), payload)
 	if err != nil {
-		return nil, fmt.Errorf("request creating error: %w", err)
+		return nil, fmt.Errorf("failed create request: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")

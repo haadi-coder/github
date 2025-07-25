@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -49,7 +48,7 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	} else {
 		path += "?" + buildSearchParams(sq)
 	}
-	
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 
 	search := new(Search[Repository])
 	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return search, nil
@@ -97,7 +96,7 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 
 	search := new(Search[User])
 	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return search, nil

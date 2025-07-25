@@ -41,7 +41,7 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, error) 
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return user, nil
@@ -56,7 +56,7 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return user, nil
@@ -92,7 +92,7 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *users, res, nil
@@ -118,7 +118,7 @@ func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateR
 
 	user := new(User)
 	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return user, nil
@@ -144,7 +144,7 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *users, res, nil
@@ -170,7 +170,7 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 	users := new([]*User)
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *users, res, nil
@@ -185,7 +185,7 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return fmt.Errorf("repsponse parsing error: %w", err)
+		return err
 	}
 
 	return nil
@@ -200,7 +200,7 @@ func (s *UsersService) Unfollow(ctx context.Context, username string) error {
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return fmt.Errorf("repsponse parsing error: %w", err)
+		return err
 	}
 
 	return nil

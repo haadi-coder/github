@@ -12,14 +12,14 @@ type RepositoriesService struct {
 }
 
 type Repository struct {
-	Id              int64      `json:"id"`
-	Name            string     `json:"name"`
-	Fullname        string     `json:"full_name"`
-	Owner           *User      `json:"owner"`
-	Private         bool       `json:"private"`
-	HtmlUrl         string     `json:"html_url"`
-	Description     string     `json:"description"`
-	
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Fullname    string `json:"full_name"`
+	Owner       *User  `json:"owner"`
+	Private     bool   `json:"private"`
+	HtmlUrl     string `json:"html_url"`
+	Description string `json:"description"`
+
 	Fork            bool       `json:"fork"`
 	Url             string     `json:"url"`
 	CloneUrl        string     `json:"clone_url"`
@@ -60,7 +60,7 @@ func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string
 
 	r := new(Repository)
 	if _, err = s.client.Do(ctx, req, r); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return r, nil
@@ -101,7 +101,7 @@ func (s *RepositoriesService) Update(ctx context.Context, owner string, repo str
 
 	r := new(Repository)
 	if _, err = s.client.Do(ctx, req, r); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return r, nil
@@ -115,7 +115,7 @@ func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo str
 	}
 
 	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return fmt.Errorf("repsponse parsing error: %w", err)
+		return err
 	}
 
 	return nil
@@ -156,7 +156,7 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 
 	repo := new(Repository)
 	if _, err = s.client.Do(ctx, req, repo); err != nil {
-		return nil, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, err
 	}
 
 	return repo, nil
@@ -202,7 +202,7 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 	repos := new([]*Repository)
 	res, err := s.client.Do(ctx, req, repos)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *repos, res, nil
@@ -234,7 +234,7 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 	contributors := new([]*User)
 	res, err := s.client.Do(ctx, req, contributors)
 	if err != nil {
-		return nil, res, fmt.Errorf("repsponse parsing error: %w", err)
+		return nil, res, err
 	}
 
 	return *contributors, res, nil
