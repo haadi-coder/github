@@ -4,13 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -42,11 +39,6 @@ const (
 	defaultRetryMax = 10
 
 	userAgent = "go-github-client/1.0"
-
-	linkPrev  = "prev"
-	linkNext  = "next"
-	linkFirst = "first"
-	linkLast  = "last"
 )
 
 func NewClient(opts ...option) (*Client, error) {
@@ -112,16 +104,6 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 	return req, nil
 }
 
-type Response struct {
-	*http.Response
-	*RateLimit
-
-	PreviousPage int
-	NextPage     int
-	FirstPage    int
-	LastPage     int
-}
-
 func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	if c.requestHook != nil {
 		c.requestHook(req)
@@ -153,7 +135,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			if !c.rateLimitRetry {
-				return buildResponse(res, rateLim), ApiError(res)
+				return buildResponse(res, rateLim), newApiError(res)
 			}
 
 			if c.rateLimitHandler != nil {
@@ -173,7 +155,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	response := buildResponse(res, rateLim)
 
 	if res.StatusCode >= 400 {
-		return response, ApiError(res)
+		return response, newApiError(res)
 	}
 
 	if v != nil {
@@ -185,72 +167,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	_ = res.Body.Close()
 
 	return response, nil
-}
-
-func buildResponse(hr *http.Response, rl *RateLimit) *Response {
-	if hr == nil {
-		return &Response{}
-	}
-
-	res := &Response{
-		Response:  hr,
-		RateLimit: rl,
-	}
-
-	if l := hr.Header.Get("Link"); l != "" {
-		err := parseLinkHeader(res, l)
-		if err != nil {
-			return res
-		}
-	}
-
-	return res
-}
-
-func parseLinkHeader(res *Response, link string) error {
-	if link == "" {
-		return errors.New("invalid Link Header")
-	}
-
-	for pair := range strings.SplitSeq(link, ",") {
-		parts := strings.Split(pair, ";")
-		if len(parts) != 2 {
-			continue
-		}
-
-		rawUrl := strings.Trim(parts[0], "< >")
-		rel := strings.ReplaceAll(strings.Trim(parts[1], " rel="), `"`, "")
-
-		url, err := url.Parse(rawUrl)
-		if err != nil {
-			return err
-		}
-
-		queries := url.Query()
-		pageCount, err := strconv.Atoi(queries.Get("page"))
-		if err != nil {
-			return err
-		}
-
-		if pageCount == 0 {
-			continue
-		}
-
-		switch rel {
-		case linkPrev:
-			res.PreviousPage = pageCount
-		case linkNext:
-			res.NextPage = pageCount
-		case linkFirst:
-			res.FirstPage = pageCount
-		case linkLast:
-			res.LastPage = pageCount
-		default:
-			continue
-		}
-	}
-
-	return nil
 }
 
 func (c *Client) waitRateLimit(rl *RateLimit, attempt int) {

@@ -34,6 +34,7 @@ type User struct {
 
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
 	path := fmt.Sprintf("users/%s", username)
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -49,6 +50,7 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, error) 
 
 func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 	path := "user"
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -111,6 +113,7 @@ type UserUpdateRequest struct {
 
 func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
 	path := "user"
+	
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
 		return nil, err

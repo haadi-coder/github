@@ -19,11 +19,7 @@ type APIError struct {
 	} `json:"errors,omitempty"`
 }
 
-func (e *APIError) Error() string {
-	return fmt.Sprintf("API Error: %d - %s\n", e.StatusCode, e.Message)
-}
-
-func ApiError(res *http.Response) error {
+func newApiError(res *http.Response) error {
 	if res == nil {
 		return errors.New("received nil response")
 	}
@@ -37,4 +33,8 @@ func ApiError(res *http.Response) error {
 	}
 
 	return errResponse
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API Error: %d - %s\n", e.StatusCode, e.Message)
 }

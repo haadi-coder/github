@@ -99,100 +99,96 @@ func TestWaitRateLimit(t *testing.T) {
 }
 
 func TestParseLinkHeader(t *testing.T) {
-	cases := []struct {
-		name       string
-		linkHeader string
-		want       Response
-		wantErr    bool
+	tests := []struct {
+		name          string
+		linkHeader    string
+		expectedPrev  int
+		expectedNext  int
+		expectedFirst int
+		expectedLast  int
+		expectError   bool
 	}{
 		{
-			name:       "Пустая строка",
-			linkHeader: "",
-			wantErr:    true,
+			name: "first page (GitHub example)",
+			linkHeader: `<https://api.github.com/repositories/123/issues?page=2&per_page=30>; rel="next", ` +
+				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="first", ` +
+				`<https://api.github.com/repositories/123/issues?page=5&per_page=30>; rel="last"`,
+
+			expectedNext:  2,
+			expectedFirst: 1,
+			expectedLast:  5,
 		},
 		{
-			name:       "Одна корректная ссылка next",
-			linkHeader: `<https://api.example.com?page=2>; rel="next"`,
-			want: Response{
-				NextPage: 2,
-			},
-			wantErr: false,
+			name: "last page (GitHub example)",
+			linkHeader: `<https://api.github.com/repositories/123/issues?page=4&per_page=30>; rel="prev", ` +
+				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="first", ` +
+				`<https://api.github.com/repositories/123/issues?page=5&per_page=30>; rel="last"`,
+			expectedPrev:  4,
+			expectedFirst: 1,
+			expectedLast:  5,
 		},
 		{
-			name:       "Одна корректная ссылка prev",
-			linkHeader: `<https://api.example.com?page=1>; rel="prev"`,
-			want: Response{
-				PreviousPage: 1,
-			},
-			wantErr: false,
+			name: "middle page (GitHub example)",
+			linkHeader: `<https://api.github.com/repositories/123/issues?page=3&per_page=30>; rel="next", ` +
+				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="prev", ` +
+				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="first", ` +
+				`<https://api.github.com/repositories/123/issues?page=5&per_page=30>; rel="last"`,
+			expectedNext:  3,
+			expectedPrev:  1,
+			expectedFirst: 1,
+			expectedLast:  5,
 		},
 		{
-			name:       "Одна корректная ссылка first",
-			linkHeader: `<https://api.example.com?page=1>; rel="first"`,
-			want: Response{
-				FirstPage: 1,
-			},
-			wantErr: false,
+			name: "single page (no pagination)",
+			linkHeader: `<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="first", ` +
+				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="last"`,
+			expectedFirst: 1,
+			expectedLast:  1,
 		},
 		{
-			name:       "Одна корректная ссылка last",
-			linkHeader: `<https://api.example.com?page=5>; rel="last"`,
-			want: Response{
-				LastPage: 5,
-			},
-			wantErr: false,
+			name:        "invalid page number",
+			linkHeader:  `<https://api.github.com/repositories/123/issues?page=invalid>; rel="next"`,
+			expectError: true,
 		},
 		{
-			name:       "Несколько ссылок",
-			linkHeader: `<https://api.example.com?page=1>; rel="first", <https://api.example.com?page=3>; rel="next", <https://api.example.com?page=1>; rel="prev", <https://api.example.com?page=5>; rel="last"`,
-			want: Response{
-				FirstPage:    1,
-				NextPage:     3,
-				PreviousPage: 1,
-				LastPage:     5,
-			},
-			wantErr: false,
+			name:         "page zero should be skipped",
+			linkHeader:   `<https://api.github.com/repositories/123/issues?page=0>; rel="next"`,
+			expectedNext: 0,
 		},
 		{
-			name:       "Некорректный URL",
-			linkHeader: `<https://api.example.com?invalid>; rel="next"`,
-			wantErr:    true,
+			name:        "empty link header",
+			linkHeader:  "",
+			expectError: true,
 		},
 		{
-			name:       "Отсутствует параметр page",
-			linkHeader: `<https://api.example.com?limit=10>; rel="next"`,
-			wantErr:    true,
-		},
-		{
-			name:       "Некорректное значение page",
-			linkHeader: `<https://api.example.com?page=abc>; rel="next"`,
-			wantErr:    true,
-		},
-		{
-			name:       "Пустое значение page",
-			linkHeader: `<https://api.example.com?page=>; rel="next"`,
-			wantErr:    true,
-		},
-		{
-			name:       "Дублирующийся rel",
-			linkHeader: `<https://api.example.com?page=2>; rel="next", <https://api.example.com?page=3>; rel="next"`,
-			want: Response{
-				NextPage: 3, // последнее значение должно перезаписать предыдущее
-			},
-			wantErr: false,
+			name:        "malformed URL",
+			linkHeader:  `<invalid-url>; rel="next"`,
+			expectError: true,
 		},
 	}
 
-	for _, tt := range cases {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := &Response{}
-			err := parseLinkHeader(resp, tt.linkHeader)
+			res := &Response{
+				Response: &http.Response{
+					Header: make(http.Header),
+				},
+			}
+			if tt.linkHeader != "" {
+				res.Header.Set("Link", tt.linkHeader)
+			}
 
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.want, *resp)
+			err := parseLinkHeader(res)
+
+			if (err != nil) != tt.expectError {
+				t.Fatalf("expected error: %v, got: %v", tt.expectError, err)
+			}
+
+			if !tt.expectError {
+				assert.Equal(t, res.PreviousPage, tt.expectedPrev)
+				assert.Equal(t, res.NextPage, tt.expectedNext)
+				assert.Equal(t, res.FirstPage, tt.expectedFirst)
+				assert.Equal(t, res.LastPage, tt.expectedLast)
 			}
 		})
 	}
@@ -294,7 +290,7 @@ func TestBuildErrorResponse(t *testing.T) {
 				}
 			}
 
-			err := ApiError(hr)
+			err := newApiError(hr)
 
 			if !tt.expectedErrIsNil {
 				assert.Error(t, err)
@@ -413,7 +409,7 @@ func TestDo(t *testing.T) {
 			name: "LinkHeaderParsing",
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					link := `<https://api.github.com/resource?page=2>; rel="next", < https://api.github.com/resource?page=1>; rel="prev"`
+					link := `<https://api.github.com/resource?page=2>; rel="next", <https://api.github.com/resource?page=1>; rel="prev"`
 					w.Header().Set("Link", link)
 					w.WriteHeader(http.StatusOK)
 				}))

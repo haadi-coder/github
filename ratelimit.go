@@ -47,6 +47,7 @@ const (
 
 func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) {
 	path := "rate_limit"
+	
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err

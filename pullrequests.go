@@ -40,6 +40,7 @@ type PullRequest struct {
 
 func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -66,6 +67,7 @@ type PullRequestCreateRequest struct {
 
 func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
+
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return nil, err
@@ -89,6 +91,7 @@ type PullRequestUpdateRequest struct {
 
 func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
+
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
 		return nil, err
@@ -117,6 +120,7 @@ type Merge struct {
 
 func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
+	
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
 		return nil, err

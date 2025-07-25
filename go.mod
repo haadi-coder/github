@@ -2,7 +2,10 @@ module github.com/haadi-coder/github
 
 go 1.24.4
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/stretchr/testify v1.10.0
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

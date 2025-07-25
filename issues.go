@@ -43,6 +43,7 @@ type Issue struct {
 
 func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -68,6 +69,7 @@ type IssueCreateRequest struct {
 
 func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
+
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return nil, err
@@ -95,6 +97,7 @@ type IssueUpdateRequest struct {
 
 func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
+
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
 		return nil, err
@@ -114,6 +117,7 @@ type IssueLockRequest struct {
 
 func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) error {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
+
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
 		return err
@@ -226,6 +230,7 @@ type IssueComment struct {
 
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
+	
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return nil, err
