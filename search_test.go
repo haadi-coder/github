@@ -86,7 +86,7 @@ func TestSearch_Repositories(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			result, err := client.Search.Repositories(context.Background(), tt.searchQuery, tt.opts)
@@ -179,7 +179,7 @@ func TestSearch_Users(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			result, err := client.Search.Users(context.Background(), tt.searchQuery, tt.opts)

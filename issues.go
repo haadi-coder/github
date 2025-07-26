@@ -8,10 +8,13 @@ import (
 	"strings"
 )
 
+// IssuesService provides access to issue-related API methods.
 type IssuesService struct {
 	client *Client
 }
 
+// Label represents a GitHub label.
+// GitHub API docs: https://docs.github.com/en/rest/issues/labels
 type Label struct {
 	Id          int64  `json:"id"`
 	Url         string `json:"url"`
@@ -21,6 +24,8 @@ type Label struct {
 	Default     bool   `json:"default"`
 }
 
+// Issue represents a GitHub issue.
+// GitHub API docs: https://docs.github.com/en/rest/issues/issues
 type Issue struct {
 	Id            int64      `json:"id"`
 	Url           string     `json:"url"`
@@ -41,6 +46,10 @@ type Issue struct {
 	ClosedBy      *User      `json:"closed_by"`
 }
 
+// Get fetches an issue by its number in a repository.
+// This method retrieves detailed information about a specific issue,
+// including its title, body, labels, assignees, and other metadata.
+// The issue number is the unique identifier within the repository.
 func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 
@@ -57,6 +66,8 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issu
 	return issue, nil
 }
 
+// IssueCreateRequest represents the request body for creating an issue.
+// GitHub API docs: https://docs.github.com/en/rest/issues/issues#create-an-issue
 type IssueCreateRequest struct {
 	Title     string   `json:"title"`
 	Body      string   `json:"body,omitempty"`
@@ -67,6 +78,10 @@ type IssueCreateRequest struct {
 	Type      string   `json:"type,omitempty"`
 }
 
+// Create creates a new issue in a repository.
+// This method allows you to create a new issue with specified title, body,
+// assignees, labels, and other optional parameters. The created issue
+// will be owned by the specified repository owner and repository name.
 func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
@@ -83,6 +98,8 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 	return issue, nil
 }
 
+// IssueUpdateRequest represents the request body for updating an issue.
+// GitHub API docs: https://docs.github.com/en/rest/issues/issues#update-an-issue
 type IssueUpdateRequest struct {
 	Title       string   `json:"title"`
 	Body        string   `json:"body,omitempty"`
@@ -95,6 +112,10 @@ type IssueUpdateRequest struct {
 	Type        string   `json:"type,omitempty"`
 }
 
+// Update updates an existing issue in a repository.
+// This method allows you to modify an existing issue by its number.
+// You can update the title, body, assignees, labels, state, and other
+// properties of the issue. Only provided fields will be updated.
 func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 
@@ -111,10 +132,16 @@ func (s *IssuesService) Update(ctx context.Context, owner string, repo string, i
 	return issue, nil
 }
 
+// IssueLockRequest represents the request body for locking an issue.
+// GitHub API docs: https://docs.github.com/en/rest/issues/issues#lock-an-issue
 type IssueLockRequest struct {
 	LockReason string `json:"lock_reason"`
 }
 
+// Lock locks an issue, limiting comments to collaborators only.
+// This method prevents non-collaborators from commenting on the issue.
+// You can optionally specify a lock reason such as "off-topic", "too heated",
+// "resolved", or "spam" to provide context for why the issue was locked.
 func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) error {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 
@@ -130,6 +157,9 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, iss
 	return nil
 }
 
+// Unlock unlocks a previously locked issue.
+// This method removes the lock from an issue, allowing all users
+// (including non-collaborators) to comment on it again.
 func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, issueNum int) error {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
@@ -144,6 +174,8 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, i
 	return nil
 }
 
+// IssueListOptions specifies the optional parameters to various List methods that support pagination.
+// GitHub API docs: https://docs.github.com/en/rest/issues/issues#list-repository-issues
 type IssueListOptions struct {
 	*ListOptions
 	State     *string
@@ -157,6 +189,11 @@ type IssueListOptions struct {
 	Direction *string
 }
 
+// ListByRepo lists issues in a repository.
+// This method retrieves a list of issues for the specified repository.
+// You can filter and sort the results using various options such as
+// issue state, assignee, creator, labels, and creation date.
+// The results are returned in pages according to the pagination options.
 func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo string, opts *IssueListOptions) ([]*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
@@ -214,10 +251,14 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 	return *issues, res, nil
 }
 
+// IssueCommentRequest represents the request body for creating or updating an issue comment.
+// GitHub API docs: https://docs.github.com/en/rest/issues/comments
 type IssueCommentRequest struct {
 	Body string `json:"body"`
 }
 
+// IssueComment represents a comment on an issue.
+// GitHub API docs: https://docs.github.com/en/rest/issues/comments
 type IssueComment struct {
 	Id        int        `json:"id"`
 	Url       string     `json:"url"`
@@ -228,9 +269,13 @@ type IssueComment struct {
 	IssueUrl  string     `json:"issue_url"`
 }
 
+// CreateComment creates a comment on an issue.
+// This method adds a new comment to the specified issue. The comment
+// will be authored by the authenticated user and will appear in the
+// issue's comment thread.
 func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
-	
+
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return nil, err
@@ -244,6 +289,8 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 	return comment, nil
 }
 
+// IssueCommentListOptions specifies the optional parameters to list issue comments.
+// GitHub API docs: https://docs.github.com/en/rest/issues/comments#list-issue-comments
 type IssueCommentListOptions struct {
 	*ListOptions
 	Since     *Timestamp
@@ -251,6 +298,10 @@ type IssueCommentListOptions struct {
 	Direction *string
 }
 
+// ListCommentsByRepo lists comments in a repository.
+// This method retrieves all comments across all issues in the specified
+// repository. You can filter the results by creation date and sort them
+// according to your preferences. The results are returned in pages.
 func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repo string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/comments", owner, repo)
 

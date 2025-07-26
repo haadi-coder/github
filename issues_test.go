@@ -79,7 +79,7 @@ func TestIssuesService_Get(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			issue, err := client.Issues.Get(context.Background(), tt.owner, tt.repoName, tt.issueNum)
@@ -148,7 +148,7 @@ func TestIssuesService_Create(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			issue, err := client.Issues.Create(context.Background(), tt.owner, tt.repoName, tt.body)
@@ -217,7 +217,7 @@ func TestIssuesService_Update(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			issue, err := client.Issues.Update(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
@@ -284,7 +284,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL), WithToken("test-token"))
+			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
 			require.NoError(t, err)
 
 			if tt.isLock {
@@ -340,7 +340,7 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			issues, _, err := client.Issues.ListByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)
@@ -404,7 +404,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			comment, err := client.Issues.CreateComment(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
@@ -455,7 +455,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			client, err := NewClient(WithBaseURl(ts.URL))
+			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
 			comments, _, err := client.Issues.ListCommentsByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)

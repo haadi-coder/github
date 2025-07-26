@@ -7,10 +7,13 @@ import (
 	"net/url"
 )
 
+// UsersService provides access to user-related API methods.
 type UsersService struct {
 	client *Client
 }
 
+// User represents a GitHub user.
+// GitHub API docs: https://docs.github.com/en/rest/users/users
 type User struct {
 	Id          int64      `json:"id"`
 	Login       string     `json:"login"`
@@ -32,6 +35,10 @@ type User struct {
 	UpdatedAt   *Timestamp `json:"updated_at"`
 }
 
+// Get retrieves information about a specific GitHub user by username.
+// This method returns public profile information for any GitHub user,
+// including their name, company, location, bio, and various statistics
+// such as follower count and public repository count.
 func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
 	path := fmt.Sprintf("users/%s", username)
 
@@ -48,6 +55,10 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, error) 
 	return user, nil
 }
 
+// GetAuthenticated retrieves information about the currently authenticated user.
+// This method returns detailed profile information for the authenticated user,
+// including private information that is only available when authenticated.
+// It requires proper authentication credentials to be configured in the client.
 func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 	path := "user"
 
@@ -64,11 +75,17 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
 	return user, nil
 }
 
+// UsersListOptions specifies the optional parameters to list users.
+// GitHub API docs: https://docs.github.com/en/rest/users/users#list-users
 type UsersListOptions struct {
 	Since int
 	*ListOptions
 }
 
+// List retrieves a list of GitHub users.
+// This method returns a paginated list of GitHub users. You can use
+// the Since parameter to specify the user ID to start listing from,
+// which is useful for pagination through large sets of users.
 func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*User, *Response, error) {
 	path := "users"
 
@@ -100,6 +117,8 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	return *users, res, nil
 }
 
+// UserUpdateRequest represents the request body for updating user profile.
+// GitHub API docs: https://docs.github.com/en/rest/users/users#update-the-authenticated-user
 type UserUpdateRequest struct {
 	Name            string `json:"name,omitempty"`
 	Email           string `json:"email,omitempty"`
@@ -111,9 +130,14 @@ type UserUpdateRequest struct {
 	Bio             string `json:"bio,omitempty"`
 }
 
+// UpdateAuthenticated updates the profile of the authenticated user.
+// This method allows you to modify the profile information of the
+// currently authenticated user, including name, email, company,
+// location, bio, and other profile fields. Only the provided
+// fields will be updated.
 func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
 	path := "user"
-	
+
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
 		return nil, err
@@ -127,6 +151,9 @@ func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateR
 	return user, nil
 }
 
+// ListAuthenticatedUserFollowers retrieves the followers of the authenticated user.
+// This method returns a list of users who are following the authenticated user.
+// The results can be paginated using the ListOptions parameter.
 func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
 	path := "user/followers"
 
@@ -153,6 +180,9 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 	return *users, res, nil
 }
 
+// ListAuthenticatedUserFollowings retrieves the users that the authenticated user is following.
+// This method returns a list of users that the authenticated user is following.
+// The results can be paginated using the ListOptions parameter.
 func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts *ListOptions) ([]*User, *Response, error) {
 	path := "user/following"
 
@@ -179,6 +209,11 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 	return *users, res, nil
 }
 
+// Follow starts following a user.
+// This method allows the authenticated user to follow another GitHub user.
+// Once followed, the target user will appear in the authenticated user's
+// following list, and the authenticated user will appear in the target
+// user's followers list.
 func (s *UsersService) Follow(ctx context.Context, username string) error {
 	path := fmt.Sprintf("user/following/%s", username)
 
@@ -194,6 +229,10 @@ func (s *UsersService) Follow(ctx context.Context, username string) error {
 	return nil
 }
 
+// Unfollow stops following a user.
+// This method allows the authenticated user to unfollow a GitHub user
+// they were previously following. This will remove the relationship
+// between the users.
 func (s *UsersService) Unfollow(ctx context.Context, username string) error {
 	path := fmt.Sprintf("user/following/%s", username)
 

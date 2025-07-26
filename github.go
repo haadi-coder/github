@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+const (
+	defaultBaseURL  = "https://api.github.com"
+	defaultWaitMin  = time.Second
+	defaultWaitMax  = 60 * time.Second
+	defaultRetryMax = 5
+
+	userAgent = "go-github"
+)
+
+// Client manages communication with the API.
+// It provides methods for accessing various API endpoints through
+// specialized services and handles common functionality such as
+// authentication, rate limiting, request/response processing,
+// and error handling.
 type Client struct {
 	client           *http.Client
 	baseURL          *url.URL
@@ -22,25 +36,31 @@ type Client struct {
 	retryWaitMin     time.Duration
 	retryWaitMax     time.Duration
 	requestHook      func(*http.Request)
-	responseHook     func(*http.Response)
+	responseHook     func(*Response)
 
-	User         *UsersService
+	// User service for user-related operations
+	User *UsersService
+
+	// Repositories service for repository-related operations
 	Repositories *RepositoriesService
-	Issues       *IssuesService
+
+	// Issues service for issue-related operations
+	Issues *IssuesService
+
+	// PullRequests service for pull request-related operations
 	PullRequests *PullRequestsService
-	Search       *SearchService
-	RateLimit    *RateLimitService
+
+	// Search service for search operations
+	Search *SearchService
+
+	// RateLimit service for rate limiting operations
+	RateLimit *RateLimitService
 }
 
-const (
-	defaultBaseURL  = "https://api.github.com"
-	defaultWaitMin  = 5 * time.Second
-	defaultWaitMax  = 60 * time.Second
-	defaultRetryMax = 10
-
-	userAgent = "go-github-client/1.0"
-)
-
+// NewClient creates a new API client with optional configuration.
+// This function initializes a new Client instance with default settings
+// and applies any provided functional options to customize the client's
+// behavior.
 func NewClient(opts ...option) (*Client, error) {
 	baseURL, _ := url.Parse(defaultBaseURL)
 	client := &Client{
@@ -54,7 +74,7 @@ func NewClient(opts ...option) (*Client, error) {
 
 	for _, opt := range opts {
 		if err := opt(client); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to apply client option: %w", err)
 		}
 	}
 
@@ -68,6 +88,9 @@ func NewClient(opts ...option) (*Client, error) {
 	return client, nil
 }
 
+// NewRequest creates an API request with the specified HTTP method, path, and body.
+// This method constructs an HTTP request with proper headers including authentication,
+// content type, accept headers, and user agent.
 func (c *Client) NewRequest(method, path string, body any) (*http.Request, error) {
 	var payload io.ReadWriter
 	if body != nil {
@@ -75,18 +98,18 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 
 		err := json.NewEncoder(payload).Encode(body)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encode JSON: %w", err)
+			return nil, fmt.Errorf("failed to encode request body: %w", err)
 		}
 	}
 
 	url, err := c.baseURL.Parse(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse URL path %s: %w", path, err)
 	}
 
 	req, err := http.NewRequest(method, url.String(), payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
@@ -104,7 +127,13 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 	return req, nil
 }
 
+// Do sends an API request and returns the API response.
+// This method executes the provided HTTP request and handles the response,
+// including automatic retry logic for rate limiting, error handling, and
+// JSON decoding of the response body into the provided target value.
 func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
+	req = req.WithContext(ctx)
+
 	if c.requestHook != nil {
 		c.requestHook(req)
 	}
@@ -112,8 +141,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	var res *http.Response
 	var err error
 	var rateLim *RateLimit
-
-	req = req.WithContext(ctx)
 
 	maxAtm := max(c.retryMax, 1)
 	for atm := range maxAtm {
@@ -130,12 +157,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if c.responseHook != nil {
-			c.responseHook(res)
+			c.responseHook(buildResponse(res, rateLim))
 		}
 
 		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
 			if !c.rateLimitRetry {
-				return buildResponse(res, rateLim), newApiError(res)
+				return buildResponse(res, rateLim), newAPIError(res)
 			}
 
 			if c.rateLimitHandler != nil {
@@ -155,7 +182,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	response := buildResponse(res, rateLim)
 
 	if res.StatusCode >= 400 {
-		return response, newApiError(res)
+		return response, newAPIError(res)
 	}
 
 	if v != nil {

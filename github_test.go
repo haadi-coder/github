@@ -201,7 +201,7 @@ func TestBuildErrorResponse(t *testing.T) {
 		body             string
 		expectedMsg      string
 		expectedDocUrl   string
-		expectedErrors   []struct{ Code, Resource, Field string }
+		expectedErrors   []APIErrorDetail
 		expectedErrIsNil bool
 	}{
 		{
@@ -220,8 +220,8 @@ func TestBuildErrorResponse(t *testing.T) {
             }`,
 			expectedMsg:    "Unauthorized access",
 			expectedDocUrl: "https://example.com/docs ",
-			expectedErrors: []struct{ Code, Resource, Field string }{
-				{"401", "auth", "token"},
+			expectedErrors: []APIErrorDetail{
+				{Code: "401", Resource: "auth", Field: "token"},
 			},
 			expectedErrIsNil: false,
 		},
@@ -249,21 +249,21 @@ func TestBuildErrorResponse(t *testing.T) {
 			name:             "Invalid JSON",
 			statusCode:       http.StatusBadRequest,
 			body:             `invalid-json`,
-			expectedMsg:      "Request failed with status 400",
+			expectedMsg:      "request failed with status 400",
 			expectedErrIsNil: false,
 		},
 		{
 			name:             "Empty body",
 			statusCode:       http.StatusInternalServerError,
 			body:             "",
-			expectedMsg:      "Request failed with status 500",
+			expectedMsg:      "request failed with status 500",
 			expectedErrIsNil: false,
 		},
 		{
 			name:             "Non-JSON body",
 			statusCode:       http.StatusNotFound,
 			body:             "Not Found",
-			expectedMsg:      "Request failed with status 404",
+			expectedMsg:      "request failed with status 404",
 			expectedErrIsNil: false,
 		},
 		{
@@ -274,23 +274,23 @@ func TestBuildErrorResponse(t *testing.T) {
                 "errors": []
             }`,
 			expectedMsg:      "Conflict detected",
-			expectedErrors:   []struct{ Code, Resource, Field string }{},
+			expectedErrors:   []APIErrorDetail{},
 			expectedErrIsNil: false,
 		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			var hr *http.Response
+			var res *http.Response
 			if tt.statusCode != 0 || tt.body != "" {
 				body := io.NopCloser(bytes.NewBufferString(tt.body))
-				hr = &http.Response{
+				res = &http.Response{
 					StatusCode: tt.statusCode,
 					Body:       body,
 				}
 			}
 
-			err := newApiError(hr)
+			err := newAPIError(res)
 
 			if !tt.expectedErrIsNil {
 				assert.Error(t, err)

@@ -7,22 +7,34 @@ import (
 	"strings"
 )
 
+// SearchService provides access to search API methods.
 type SearchService struct {
 	client *Client
 }
 
+// Search represents the response from a search GitHub API request.
+// The type parameter T allows this struct to be used with different
+// resource types like Repository or User.
+// GitHub API docs: https://docs.github.com/en/rest/search/search
 type Search[T Repository | User] struct {
 	TotalCount        int  `json:"total_count"`
 	IncompleteResults bool `json:"incomplete_results"`
 	Items             []*T `json:"items"`
 }
 
+// SearchOptions specifies the optional parameters for search operations.
+// GitHub API docs: https://docs.github.com/en/rest/search/search
 type SearchOptions struct {
 	*ListOptions
 	Sort  *string
 	Order *string
 }
 
+// Repositories searches for repositories based on the provided query.
+// This method allows you to search repositories using GitHub's code search
+// syntax. You can filter by various criteria such as language, stars,
+// forks, and more. The results can be sorted and paginated using
+// the SearchOptions parameter.
 func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
 	path := "search/repositories"
 
@@ -62,6 +74,11 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	return search, nil
 }
 
+// Users searches for users based on the provided query.
+// This method allows you to search for GitHub users using various
+// search criteria such as username, full name, location, and followers.
+// The results can be sorted by different fields and paginated using
+// the SearchOptions parameter.
 func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], error) {
 	path := "search/users"
 

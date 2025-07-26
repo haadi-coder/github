@@ -7,19 +7,21 @@ import (
 	"net/url"
 )
 
+// RepositoriesService provides access to repository-related API methods.
 type RepositoriesService struct {
 	client *Client
 }
 
+// Repository represents a GitHub repository.
+// GitHub API docs: https://docs.github.com/en/rest/repos/repos
 type Repository struct {
-	Id          int64  `json:"id"`
-	Name        string `json:"name"`
-	Fullname    string `json:"full_name"`
-	Owner       *User  `json:"owner"`
-	Private     bool   `json:"private"`
-	HtmlUrl     string `json:"html_url"`
-	Description string `json:"description"`
-
+	Id              int64      `json:"id"`
+	Name            string     `json:"name"`
+	Fullname        string     `json:"full_name"`
+	Owner           *User      `json:"owner"`
+	Private         bool       `json:"private"`
+	HtmlUrl         string     `json:"html_url"`
+	Description     string     `json:"description"`
 	Fork            bool       `json:"fork"`
 	Url             string     `json:"url"`
 	CloneUrl        string     `json:"clone_url"`
@@ -51,6 +53,9 @@ type Repository struct {
 	}
 }
 
+// Get fetches a repository by its owner and name.
+// This method retrieves detailed information about a specific repository,
+// including its metadata, statistics, and permissions for the authenticated user.
 func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -66,6 +71,8 @@ func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string
 	return r, nil
 }
 
+// RepositoryUpdateRequest represents the request body for updating a repository.
+// GitHub API docs: https://docs.github.com/en/rest/repos/repos#update-a-repository
 type RepositoryUpdateRequest struct {
 	Name                      string `json:"name,omitempty"`
 	Description               string `json:"description,omitempty"`
@@ -92,6 +99,10 @@ type RepositoryUpdateRequest struct {
 	AllowForking              bool   `json:"allow_forking,omitempty"`
 }
 
+// Update modifies an existing repository's properties.
+// This method allows you to update various settings and metadata of a repository
+// such as its name, description, visibility, merge settings, and other configuration
+// options. Only the provided fields will be updated.
 func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
@@ -107,6 +118,10 @@ func (s *RepositoriesService) Update(ctx context.Context, owner string, repo str
 	return r, nil
 }
 
+// Delete removes a repository permanently.
+// This method deletes the specified repository. This action cannot be undone,
+// and all data including issues, pull requests, and wiki pages will be lost.
+// Note that this requires admin permissions on the repository.
 func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) error {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
@@ -121,6 +136,8 @@ func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo str
 	return nil
 }
 
+// RepositoryCreateRequest represents the request body for creating a repository.
+// GitHub API docs: https://docs.github.com/en/rest/repos/repos#create-a-repository-for-the-authenticated-user
 type RepositoryCreateRequest struct {
 	Name                     string `json:"name"`
 	Description              string `json:"description,omitempty"`
@@ -147,9 +164,14 @@ type RepositoryCreateRequest struct {
 	IsTemplate               bool   `json:"is_template,omitempty"`
 }
 
+// Create creates a new repository for the authenticated user.
+// This method allows you to create a new repository with various initial
+// configuration options such as description, visibility, initialization
+// settings, and merge preferences. The repository will be owned by
+// the authenticated user.
 func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateRequest) (*Repository, error) {
 	path := "user/repos"
-	
+
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
 		return nil, err
@@ -163,6 +185,8 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 	return repo, nil
 }
 
+// RepositoryListOptions specifies the optional parameters to list repositories.
+// GitHub API docs: https://docs.github.com/en/rest/repos/repos#list-repositories-for-a-user
 type RepositoryListOptions struct {
 	*ListOptions
 	Type      *string
@@ -171,6 +195,11 @@ type RepositoryListOptions struct {
 	Anon      *string
 }
 
+// List retrieves repositories for a specific user.
+// This method allows you to list repositories owned by a particular user
+// with various filtering and sorting options. You can filter by repository
+// type (all, owner, member) and sort by creation date, update date, or
+// other criteria. The results are returned in pages.
 func (s *RepositoriesService) List(ctx context.Context, owner string, opts *RepositoryListOptions) ([]*Repository, *Response, error) {
 	path := fmt.Sprintf("users/%s/repos", owner)
 
@@ -209,6 +238,11 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 	return *repos, res, nil
 }
 
+// ListContributors retrieves the list of contributors for a repository.
+// This method returns a list of users who have contributed to the specified
+// repository. You can include anonymous contributors in the results and
+// the list is sorted by the number of contributions. The results are
+// returned in pages according to the pagination options.
 func (s *RepositoriesService) ListContributors(ctx context.Context, owner string, repo string, opts *RepositoryListOptions) ([]*User, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/contributors", owner, repo)
 

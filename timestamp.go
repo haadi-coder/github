@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// Timestamp represents a time.Time value that can be marshaled and unmarshaled
+// to and from JSON in RFC3339 format. This type is used for GitHub API timestamp
+// fields that need proper JSON serialization handling.
 type Timestamp struct {
 	time.Time
 }

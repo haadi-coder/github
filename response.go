@@ -9,14 +9,31 @@ import (
 	"github.com/tomnomnom/linkheader"
 )
 
+// Response wraps the standard http.Response and provides additional
+// convenience methods for working with API responses. It includes
+// rate limit information and pagination helpers extracted from
+// response headers.
 type Response struct {
 	*http.Response
+
+	// RateLimit contains the rate limit information extracted from
+	// the response headers for the current request
 	*RateLimit
 
+	// PreviousPage contains the page number of the previous page
+	// of results, if available
 	PreviousPage int
-	NextPage     int
-	FirstPage    int
-	LastPage     int
+
+	// NextPage contains the page number of the next page of results,
+	// if available
+	NextPage int
+
+	// FirstPage contains the page number of the first page of results
+	FirstPage int
+
+	// LastPage contains the page number of the last page of results,
+	// if available
+	LastPage int
 }
 
 func buildResponse(hr *http.Response, rl *RateLimit) *Response {
