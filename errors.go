@@ -28,14 +28,13 @@ type APIError struct {
 // APIErrorDetail represents detailed information about a specific error.
 // It provides additional context about what went wrong during API requests.
 type APIErrorDetail struct {
-	// Code represents the error code (e.g., "401", "404", "500")
+	// Code represents the error code
 	Code string `json:"code,omitempty"`
 
 	// Resource indicates the type of resource that caused the error
-	// (e.g., "Issue", "Repository", "User")
 	Resource string `json:"resource,omitempty"`
 
-	// Field specifies which field caused the error (e.g., "title", "body", "name")
+	// Field specifies which field caused the error
 	Field string `json:"field,omitempty"`
 }
 
