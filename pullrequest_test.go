@@ -23,7 +23,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 		owner        string
 		repoName     string
 		pullNum      int
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *PullRequest
 	}{
@@ -32,7 +32,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 			owner:       "octocat",
 			repoName:    "Hello-World",
 			pullNum:     1,
-			expectedUrl: "/repos/octocat/Hello-World/pulls/1",
+			expectedURL: "/repos/octocat/Hello-World/pulls/1",
 			responseBody: fmt.Sprintf(`{
                 "id": 1,
                 "title": "Test PR",
@@ -42,7 +42,7 @@ func TestPullRequestsService_Get(t *testing.T) {
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
 			expected: &PullRequest{
-				Id:        1,
+				ID:        1,
 				Title:     "Test PR",
 				Number:    1,
 				State:     "open",
@@ -55,7 +55,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -85,7 +85,7 @@ func TestPullRequestsService_Create(t *testing.T) {
 		owner        string
 		repoName     string
 		body         *PullRequestCreateRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *PullRequest
 	}{
@@ -99,7 +99,7 @@ func TestPullRequestsService_Create(t *testing.T) {
 				Title: "New feature",
 				Body:  "Adds new feature",
 			},
-			expectedUrl: "/repos/octocat/Hello-World/pulls",
+			expectedURL: "/repos/octocat/Hello-World/pulls",
 			responseBody: fmt.Sprintf(`{
                 "id": 1,
                 "title": "New feature",
@@ -109,7 +109,7 @@ func TestPullRequestsService_Create(t *testing.T) {
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
 			expected: &PullRequest{
-				Id:        1,
+				ID:        1,
 				Title:     "New feature",
 				Number:    1,
 				State:     "open",
@@ -122,7 +122,7 @@ func TestPullRequestsService_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -159,7 +159,7 @@ func TestPullRequestsService_Update(t *testing.T) {
 		repoName     string
 		pullNum      int
 		body         *PullRequestUpdateRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *PullRequest
 	}{
@@ -172,7 +172,7 @@ func TestPullRequestsService_Update(t *testing.T) {
 				Title: "Updated title",
 				State: "closed",
 			},
-			expectedUrl: "/repos/octocat/Hello-World/pulls/1",
+			expectedURL: "/repos/octocat/Hello-World/pulls/1",
 			responseBody: fmt.Sprintf(`{
                 "id": 1,
                 "title": "Updated title",
@@ -182,7 +182,7 @@ func TestPullRequestsService_Update(t *testing.T) {
                 "updated_at": "%s"
             }`, createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
 			expected: &PullRequest{
-				Id:        1,
+				ID:        1,
 				Title:     "Updated title",
 				Number:    1,
 				State:     "closed",
@@ -195,7 +195,7 @@ func TestPullRequestsService_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -231,7 +231,7 @@ func TestPullRequestsService_Merge(t *testing.T) {
 		repoName     string
 		pullNum      int
 		body         *MergeRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *Merge
 	}{
@@ -244,7 +244,7 @@ func TestPullRequestsService_Merge(t *testing.T) {
 				Sha:         "abc123",
 				MergeMethod: "merge",
 			},
-			expectedUrl: "/repos/octocat/Hello-World/pulls/1/merge",
+			expectedURL: "/repos/octocat/Hello-World/pulls/1/merge",
 			responseBody: fmt.Sprintf(`{
                 "sha": "abc123",
                 "merged": true,
@@ -262,7 +262,7 @@ func TestPullRequestsService_Merge(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PUT", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -299,7 +299,7 @@ func TestPullRequestsService_List(t *testing.T) {
 		owner        string
 		repoName     string
 		opts         *PullRequestListOptions
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     []*PullRequest
 	}{
@@ -311,7 +311,7 @@ func TestPullRequestsService_List(t *testing.T) {
 				ListOptions: &ListOptions{Page: 1, PerPage: 30},
 				State:       &state,
 			},
-			expectedUrl: "/repos/octocat/Hello-World/pulls?page=1&per_page=30&state=open",
+			expectedURL: "/repos/octocat/Hello-World/pulls?page=1&per_page=30&state=open",
 			responseBody: fmt.Sprintf(`[
                 {
                     "id": 1,
@@ -333,7 +333,7 @@ func TestPullRequestsService_List(t *testing.T) {
 				createdAt.Format(time.RFC3339), updatedAt.Format(time.RFC3339)),
 			expected: []*PullRequest{
 				{
-					Id:        1,
+					ID:        1,
 					Title:     "PR 1",
 					Number:    1,
 					State:     "open",
@@ -341,7 +341,7 @@ func TestPullRequestsService_List(t *testing.T) {
 					UpdatedAt: &Timestamp{updatedAt},
 				},
 				{
-					Id:        2,
+					ID:        2,
 					Title:     "PR 2",
 					Number:    2,
 					State:     "closed",
@@ -355,7 +355,7 @@ func TestPullRequestsService_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.String())
+				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")

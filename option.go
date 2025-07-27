@@ -32,11 +32,11 @@ func WithHTTPClient(client *http.Client) option {
 // WithBaseURL configures the client to use the specified base URL for
 // all API requests. This is useful for testing against different API
 // endpoints or enterprise GitHub instances.
-func WithBaseURL(baseUrl string) option {
+func WithBaseURL(baseURL string) option {
 	return func(c *Client) error {
-		parsed, err := url.Parse(baseUrl)
+		parsed, err := url.Parse(baseURL)
 		if err != nil {
-			return fmt.Errorf("failed to parse base URL %s: %w", baseUrl, err)
+			return fmt.Errorf("failed to parse base URL %s: %w", baseURL, err)
 		}
 		c.baseURL = parsed
 		return nil

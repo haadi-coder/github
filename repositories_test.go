@@ -61,13 +61,13 @@ func TestRepositoriesService_Get(t *testing.T) {
 				"updated_at": null
             }`,
 			expected: &Repository{
-				Id:          1296269,
+				ID:          1296269,
 				Name:        "Hello-World",
 				Description: "My first repository on GitHub!",
 				Fullname:    "octocat/Hello-World",
 				Private:     false,
 				IsTemplate:  false,
-				Owner:       &User{Id: 583231, Login: "octocat"},
+				Owner:       &User{ID: 583231, Login: "octocat"},
 			},
 			expectError: false,
 		},
@@ -147,7 +147,7 @@ func TestRepositoriesService_Create(t *testing.T) {
                 "description": "My first repo"
             }`,
 			expected: &Repository{
-				Id:          1296269,
+				ID:          1296269,
 				Name:        "Hello-World",
 				Description: "My first repo",
 			},
@@ -225,7 +225,7 @@ func TestRepositoriesService_Update(t *testing.T) {
                 "description": "Updated description"
             }`,
 			expected: &Repository{
-				Id:          1296269,
+				ID:          1296269,
 				Description: "Updated description",
 			},
 			expectError: false,
@@ -359,8 +359,8 @@ func TestRepositoriesService_List(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"name":"repo1"},{"id":2,"name":"repo2"}]`,
 			expectedResult: []*Repository{
-				{Id: 1, Name: "repo1"},
-				{Id: 2, Name: "repo2"},
+				{ID: 1, Name: "repo1"},
+				{ID: 2, Name: "repo2"},
 			},
 			expectError: false,
 		},
@@ -432,8 +432,8 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"login":"contrib1"},{"id":2,"login":"contrib2"}]`,
 			expectedResult: []*User{
-				{Id: 1, Login: "contrib1"},
-				{Id: 2, Login: "contrib2"},
+				{ID: 1, Login: "contrib1"},
+				{ID: 2, Login: "contrib2"},
 			},
 			expectError: false,
 		},

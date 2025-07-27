@@ -200,7 +200,7 @@ func TestBuildErrorResponse(t *testing.T) {
 		statusCode       int
 		body             string
 		expectedMsg      string
-		expectedDocUrl   string
+		expectedDocURL   string
 		expectedErrors   []APIErrorDetail
 		expectedErrIsNil bool
 	}{
@@ -219,7 +219,7 @@ func TestBuildErrorResponse(t *testing.T) {
                 ]
             }`,
 			expectedMsg:    "Unauthorized access",
-			expectedDocUrl: "https://example.com/docs ",
+			expectedDocURL: "https://example.com/docs ",
 			expectedErrors: []APIErrorDetail{
 				{Code: "401", Resource: "auth", Field: "token"},
 			},
@@ -233,7 +233,7 @@ func TestBuildErrorResponse(t *testing.T) {
                 "documentation_url": "https://example.com/validation "
             }`,
 			expectedMsg:      "Validation failed",
-			expectedDocUrl:   "https://example.com/validation ",
+			expectedDocURL:   "https://example.com/validation ",
 			expectedErrIsNil: false,
 		},
 		{
@@ -296,7 +296,7 @@ func TestBuildErrorResponse(t *testing.T) {
 				assert.Error(t, err)
 				e := err.(*APIError)
 				assert.Equal(t, tt.expectedMsg, e.Message)
-				assert.Equal(t, tt.expectedDocUrl, e.DocumentationUrl)
+				assert.Equal(t, tt.expectedDocURL, e.DocumentationURL)
 
 				if len(tt.expectedErrors) > 0 {
 					assert.Equal(t, len(tt.expectedErrors), len(e.Errors))

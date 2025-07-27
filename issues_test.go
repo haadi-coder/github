@@ -20,7 +20,7 @@ func TestIssuesService_Get(t *testing.T) {
 		owner        string
 		repoName     string
 		issueNum     int
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *Issue
 	}{
@@ -29,7 +29,7 @@ func TestIssuesService_Get(t *testing.T) {
 			owner:       "octocat",
 			repoName:    "Hello-World",
 			issueNum:    1,
-			expectedUrl: "/repos/octocat/Hello-World/issues/1",
+			expectedURL: "/repos/octocat/Hello-World/issues/1",
 			responseBody: `{
                 "id": 1,
                 "url": "https://api.github.com/repos/octocat/Hello-World/issues/1",
@@ -48,17 +48,17 @@ func TestIssuesService_Get(t *testing.T) {
                 "updated_at": "2023-10-11T14:30:00Z"
             }`,
 			expected: &Issue{
-				Id:            1,
-				Url:           "https://api.github.com/repos/octocat/Hello-World/issues/1",
-				RepositoryUrl: "https://api.github.com/repos/octocat/Hello-World",
+				ID:            1,
+				URL:           "https://api.github.com/repos/octocat/Hello-World/issues/1",
+				RepositoryURL: "https://api.github.com/repos/octocat/Hello-World",
 				Number:        1,
 				State:         "open",
 				Title:         "Test Issue",
 				Body:          "Test Body",
-				Labels:        []*Label{{Id: 1, Name: "bug"}},
-				User:          &User{Id: 583231, Login: "octocat"},
-				Assignee:      &User{Id: 583231, Login: "octocat"},
-				Assignees:     []*User{{Id: 583231, Login: "octocat"}},
+				Labels:        []*Label{{ID: 1, Name: "bug"}},
+				User:          &User{ID: 583231, Login: "octocat"},
+				Assignee:      &User{ID: 583231, Login: "octocat"},
+				Assignees:     []*User{{ID: 583231, Login: "octocat"}},
 				Locked:        false,
 				Comments:      1,
 				CreatedAt:     &Timestamp{time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)},
@@ -70,7 +70,7 @@ func TestIssuesService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -97,7 +97,7 @@ func TestIssuesService_Create(t *testing.T) {
 		owner        string
 		repoName     string
 		body         *IssueCreateRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *Issue
 	}{
@@ -110,7 +110,7 @@ func TestIssuesService_Create(t *testing.T) {
 				Body:   "New Body",
 				Labels: []*Label{{Name: "bug"}},
 			},
-			expectedUrl: "/repos/octocat/Hello-World/issues",
+			expectedURL: "/repos/octocat/Hello-World/issues",
 			responseBody: `{
                 "id": 1,
                 "title": "New Issue",
@@ -120,11 +120,11 @@ func TestIssuesService_Create(t *testing.T) {
                 "created_at": "2023-10-10T12:00:00Z"
             }`,
 			expected: &Issue{
-				Id:        1,
+				ID:        1,
 				Title:     "New Issue",
 				Body:      "New Body",
-				Labels:    []*Label{{Id: 1, Name: "bug"}},
-				User:      &User{Id: 583231, Login: "octocat"},
+				Labels:    []*Label{{ID: 1, Name: "bug"}},
+				User:      &User{ID: 583231, Login: "octocat"},
 				CreatedAt: &Timestamp{time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)},
 			},
 		},
@@ -133,7 +133,7 @@ func TestIssuesService_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -167,7 +167,7 @@ func TestIssuesService_Update(t *testing.T) {
 		repoName     string
 		issueNum     int
 		body         *IssueUpdateRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *Issue
 	}{
@@ -181,7 +181,7 @@ func TestIssuesService_Update(t *testing.T) {
 				State:  "closed",
 				Labels: []*Label{{Name: "enhancement"}},
 			},
-			expectedUrl: "/repos/octocat/Hello-World/issues/1",
+			expectedURL: "/repos/octocat/Hello-World/issues/1",
 			responseBody: `{
                 "id": 1,
                 "title": "Updated Title",
@@ -190,10 +190,10 @@ func TestIssuesService_Update(t *testing.T) {
                 "updated_at": "2023-10-12T15:00:00Z"
             }`,
 			expected: &Issue{
-				Id:        1,
+				ID:        1,
 				Title:     "Updated Title",
 				State:     "closed",
-				Labels:    []*Label{{Id: 2, Name: "enhancement"}},
+				Labels:    []*Label{{ID: 2, Name: "enhancement"}},
 				UpdatedAt: &Timestamp{time.Date(2023, 10, 12, 15, 0, 0, 0, time.UTC)},
 			},
 		},
@@ -202,7 +202,7 @@ func TestIssuesService_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -237,7 +237,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 		issueNum       int
 		body           *IssueLockRequest
 		isLock         bool
-		expectedUrl    string
+		expectedURL    string
 		responseStatus int
 	}{
 		{
@@ -247,7 +247,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 			issueNum:       1,
 			body:           &IssueLockRequest{LockReason: "spam"},
 			isLock:         true,
-			expectedUrl:    "/repos/octocat/Hello-World/issues/1/lock",
+			expectedURL:    "/repos/octocat/Hello-World/issues/1/lock",
 			responseStatus: http.StatusNoContent,
 		},
 		{
@@ -257,7 +257,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 			issueNum:       1,
 			body:           nil,
 			isLock:         false,
-			expectedUrl:    "/repos/octocat/Hello-World/issues/1/lock",
+			expectedURL:    "/repos/octocat/Hello-World/issues/1/lock",
 			responseStatus: http.StatusNoContent,
 		},
 	}
@@ -265,7 +265,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				if tt.isLock {
 					assert.Equal(t, "PUT", r.Method)
 				} else {
@@ -305,7 +305,7 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 		owner        string
 		repoName     string
 		opts         *IssueListOptions
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     []*Issue
 	}{
@@ -319,11 +319,11 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 				Assignee:    &assignee,
 				Labels:      []string{"enhancement"},
 			},
-			expectedUrl:  "/repos/octocat/Hello-World/issues?assignee=octocat&labels=enhancement&page=1&per_page=30&state=open",
+			expectedURL:  "/repos/octocat/Hello-World/issues?assignee=octocat&labels=enhancement&page=1&per_page=30&state=open",
 			responseBody: `[{"id":1,"title":"Issue 1"},{"id":2,"title":"Issue 2"}]`,
 			expected: []*Issue{
-				{Id: 1, Title: "Issue 1"},
-				{Id: 2, Title: "Issue 2"},
+				{ID: 1, Title: "Issue 1"},
+				{ID: 2, Title: "Issue 2"},
 			},
 		},
 	}
@@ -331,7 +331,7 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.String())
+				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -360,7 +360,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
 		repoName     string
 		issueNum     int
 		body         IssueCommentRequest
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     *IssueComment
 	}{
@@ -370,7 +370,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
 			repoName:    "Hello-World",
 			issueNum:    1,
 			body:        IssueCommentRequest{Body: "New comment"},
-			expectedUrl: "/repos/octocat/Hello-World/issues/1/comments",
+			expectedURL: "/repos/octocat/Hello-World/issues/1/comments",
 			responseBody: `{
                 "id": 1,
                 "body": "New comment",
@@ -378,9 +378,9 @@ func TestIssuesService_CreateComment(t *testing.T) {
                 "created_at": "2023-10-10T12:00:00Z"
             }`,
 			expected: &IssueComment{
-				Id:        1,
+				ID:        1,
 				Body:      "New comment",
-				User:      &User{Id: 583231, Login: "octocat"},
+				User:      &User{ID: 583231, Login: "octocat"},
 				CreatedAt: &Timestamp{time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)},
 			},
 		},
@@ -389,7 +389,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				assert.Equal(t, tt.expectedUrl, r.URL.Path)
+				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
@@ -422,7 +422,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 		owner        string
 		repoName     string
 		opts         *IssueCommentListOptions
-		expectedUrl  string
+		expectedURL  string
 		responseBody string
 		expected     []*IssueComment
 	}{
@@ -434,11 +434,11 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 				ListOptions: &ListOptions{Page: 1, PerPage: 30},
 				Since:       &Timestamp{time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)},
 			},
-			expectedUrl:  "/repos/octocat/Hello-World/issues/comments?page=1&per_page=30&since=2023-10-10T12:00:00Z",
+			expectedURL:  "/repos/octocat/Hello-World/issues/comments?page=1&per_page=30&since=2023-10-10T12:00:00Z",
 			responseBody: `[{"id":1,"body":"Comment 1"},{"id":2,"body":"Comment 2"}]`,
 			expected: []*IssueComment{
-				{Id: 1, Body: "Comment 1"},
-				{Id: 2, Body: "Comment 2"},
+				{ID: 1, Body: "Comment 1"},
+				{ID: 2, Body: "Comment 2"},
 			},
 		}}
 
@@ -446,7 +446,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				url, _ := url.QueryUnescape(r.URL.String())
-				assert.Equal(t, tt.expectedUrl, url)
+				assert.Equal(t, tt.expectedURL, url)
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")

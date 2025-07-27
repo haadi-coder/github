@@ -15,7 +15,7 @@ type UsersService struct {
 // User represents a GitHub user.
 // GitHub API docs: https://docs.github.com/en/rest/users/users
 type User struct {
-	Id          int64      `json:"id"`
+	ID          int64      `json:"id"`
 	Login       string     `json:"login"`
 	NodeID      string     `json:"node_id"`
 	AvatarURL   string     `json:"avatar_url"`

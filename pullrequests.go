@@ -15,10 +15,10 @@ type PullRequestsService struct {
 // PullRequest represents a GitHub pull request.
 // GitHub API docs: https://docs.github.com/en/rest/pulls/pulls
 type PullRequest struct {
-	Id                 int         `json:"id"`
+	ID                int         `json:"id"`
 	Title              string      `json:"title"`
 	Body               string      `json:"body"`
-	Url                string      `json:"url"`
+	URL                string      `json:"url"`
 	Number             int         `json:"number"`
 	State              string      `json:"state"`
 	Locked             bool        `json:"locked"`
@@ -32,13 +32,13 @@ type PullRequest struct {
 	RequestedReviewers []*User     `json:"requested_reviewers"`
 	Repository         *Repository `json:"repository"`
 	User               *User       `json:"user"`
-	HtmlUrl            string      `json:"html_url"`
-	DiffUrl            string      `json:"diff_url"`
-	PatchUrl           string      `json:"patch_url"`
-	IssueUrl           string      `json:"issue_url"`
-	CommitsUrl         string      `json:"commits_url"`
-	CommentsUrl        string      `json:"comments_url"`
-	StatusesUrl        string      `json:"statuses_url"`
+	HtmlURL            string      `json:"html_url"`
+	DiffURL            string      `json:"diff_url"`
+	PatchURL           string      `json:"patch_url"`
+	IssueURL           string      `json:"issue_url"`
+	CommitsURL         string      `json:"commits_url"`
+	CommentsURL        string      `json:"comments_url"`
+	StatusesURL        string      `json:"statuses_url"`
 }
 
 // Get fetches a pull request by its number in a repository.

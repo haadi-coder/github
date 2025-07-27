@@ -39,7 +39,7 @@ func TestSearch_Repositories(t *testing.T) {
 			expected: &Search[Repository]{
 				TotalCount:        100,
 				IncompleteResults: false,
-				Items:             []*Repository{{Id: 1, Name: "go-lang"}},
+				Items:             []*Repository{{ID: 1, Name: "go-lang"}},
 			},
 		},
 		{
@@ -132,7 +132,7 @@ func TestSearch_Users(t *testing.T) {
 			expected: &Search[User]{
 				TotalCount:        50,
 				IncompleteResults: false,
-				Items:             []*User{{Id: 1, Login: "john_doe"}},
+				Items:             []*User{{ID: 1, Login: "john_doe"}},
 			},
 		},
 		{

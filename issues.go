@@ -16,8 +16,8 @@ type IssuesService struct {
 // Label represents a GitHub label.
 // GitHub API docs: https://docs.github.com/en/rest/issues/labels
 type Label struct {
-	Id          int64  `json:"id"`
-	Url         string `json:"url"`
+	ID          int64  `json:"id"`
+	URL         string `json:"url"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Color       string `json:"color"`
@@ -27,9 +27,9 @@ type Label struct {
 // Issue represents a GitHub issue.
 // GitHub API docs: https://docs.github.com/en/rest/issues/issues
 type Issue struct {
-	Id            int64      `json:"id"`
-	Url           string     `json:"url"`
-	RepositoryUrl string     `json:"repository_url"`
+	ID            int64      `json:"id"`
+	URL           string     `json:"url"`
+	RepositoryURL string     `json:"repository_url"`
 	Number        int        `json:"number"`
 	State         string     `json:"state"`
 	Title         string     `json:"title"`
@@ -260,13 +260,13 @@ type IssueCommentRequest struct {
 // IssueComment represents a comment on an issue.
 // GitHub API docs: https://docs.github.com/en/rest/issues/comments
 type IssueComment struct {
-	Id        int        `json:"id"`
-	Url       string     `json:"url"`
+	ID        int        `json:"id"`
+	URL       string     `json:"url"`
 	Body      string     `json:"body"`
 	User      *User      `json:"user"`
 	CreatedAt *Timestamp `json:"created_at"`
 	UpdatedAt *Timestamp `json:"updated_at"`
-	IssueUrl  string     `json:"issue_url"`
+	IssueURL  string     `json:"issue_url"`
 }
 
 // CreateComment creates a comment on an issue.

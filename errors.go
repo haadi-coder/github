@@ -13,9 +13,9 @@ type APIError struct {
 	// Message contains the error message returned by the API
 	Message string `json:"message"`
 
-	// DocumentationUrl provides a link to the API documentation
+	// DocumentationURL provides a link to the API documentation
 	// related to this error, if available
-	DocumentationUrl string `json:"documentation_url,omitempty"`
+	DocumentationURL string `json:"documentation_url,omitempty"`
 
 	// StatusCode contains the HTTP status code of the response
 	StatusCode int

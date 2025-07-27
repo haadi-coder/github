@@ -15,17 +15,17 @@ type RepositoriesService struct {
 // Repository represents a GitHub repository.
 // GitHub API docs: https://docs.github.com/en/rest/repos/repos
 type Repository struct {
-	Id              int64      `json:"id"`
+	ID              int64      `json:"id"`
 	Name            string     `json:"name"`
 	Fullname        string     `json:"full_name"`
 	Owner           *User      `json:"owner"`
 	Private         bool       `json:"private"`
-	HtmlUrl         string     `json:"html_url"`
+	HtmlURL         string     `json:"html_url"`
 	Description     string     `json:"description"`
 	Fork            bool       `json:"fork"`
-	Url             string     `json:"url"`
-	CloneUrl        string     `json:"clone_url"`
-	MirrorUrl       string     `json:"mirror_url"`
+	URL             string     `json:"url"`
+	CloneURL        string     `json:"clone_url"`
+	MirrorURL       string     `json:"mirror_url"`
 	Language        string     `json:"language"`
 	ForksCount      int        `json:"forks_count"`
 	StargazersCount int        `json:"stargazers_count"`
@@ -147,7 +147,7 @@ type RepositoryCreateRequest struct {
 	HasProjects              bool   `json:"has_projects,omitempty"`
 	HasWiki                  bool   `json:"has_wiki,omitempty"`
 	HasDiscussions           bool   `json:"has_discussions,omitempty"`
-	TeamId                   int    `json:"team_id,omitempty"`
+	TeamID                   int    `json:"team_id,omitempty"`
 	AutoInit                 bool   `json:"auto_init,omitempty"`
 	GitignoreTemplate        string `json:"gitignore_template,omitempty"`
 	LicenseTemplate          string `json:"license_template,omitempty"`

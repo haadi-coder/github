@@ -28,7 +28,7 @@ func TestUsersService_Get(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":1,"login":"testuser","name":"Test User"}`,
 			expected: &User{
-				Id:    1,
+				ID:    1,
 				Login: "testuser",
 				Name:  "Test User",
 			},
@@ -79,7 +79,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":2,"login":"authuser","name":"Auth User"}`,
 			expected: &User{
-				Id:    2,
+				ID:    2,
 				Login: "authuser",
 				Name:  "Auth User",
 			},
@@ -143,8 +143,8 @@ func TestUsersService_List(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"login":"user1"},{"id":2,"login":"user2"}]`,
 			expected: []*User{
-				{Id: 1, Login: "user1"},
-				{Id: 2, Login: "user2"},
+				{ID: 1, Login: "user1"},
+				{ID: 2, Login: "user2"},
 			},
 			expectedQuery: "page=2&per_page=50&since=1",
 		},
@@ -209,7 +209,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `{"id":3,"name":"New Name","email":"new@example.com"}`,
 			expected: &User{
-				Id:    3,
+				ID:    3,
 				Name:  "New Name",
 				Email: "new@example.com",
 			},
@@ -283,8 +283,8 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			responseStatus: http.StatusOK,
 			responseBody:   `[{"id":1,"login":"follower1"},{"id":2,"login":"follower2"}]`,
 			expected: []*User{
-				{Id: 1, Login: "follower1"},
-				{Id: 2, Login: "follower2"},
+				{ID: 1, Login: "follower1"},
+				{ID: 2, Login: "follower2"},
 			},
 			expectedQuery: "page=2&per_page=50",
 		},
