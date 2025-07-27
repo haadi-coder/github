@@ -15,7 +15,7 @@ type PullRequestsService struct {
 // PullRequest represents a GitHub pull request.
 // GitHub API docs: https://docs.github.com/en/rest/pulls/pulls
 type PullRequest struct {
-	ID                int         `json:"id"`
+	ID                 int         `json:"id"`
 	Title              string      `json:"title"`
 	Body               string      `json:"body"`
 	URL                string      `json:"url"`
