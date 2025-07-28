@@ -75,28 +75,28 @@ func (s *RateLimitService) Get(ctx context.Context) (*RateLimitResponse, error) 
 	return rl, nil
 }
 
-func getRateLimit(res *http.Response) *RateLimit {
+func getRateLimit(resp *http.Response) *RateLimit {
 	rl := RateLimit{}
 
-	if lim := res.Header.Get(rateLimitHeader); lim != "" {
+	if lim := resp.Header.Get(rateLimitHeader); lim != "" {
 		if intL, err := strconv.Atoi(lim); err == nil {
 			rl.Limit = intL
 		}
 	}
 
-	if rem := res.Header.Get(rateRemainigHeader); rem != "" {
+	if rem := resp.Header.Get(rateRemainigHeader); rem != "" {
 		if intRm, err := strconv.Atoi(rem); err == nil {
 			rl.Remaining = intRm
 		}
 	}
 
-	if res := res.Header.Get(rateResetHeader); res != "" {
+	if res := resp.Header.Get(rateResetHeader); res != "" {
 		if intRes, err := strconv.ParseInt(res, 10, 64); err == nil {
 			rl.Reset = intRes
 		}
 	}
 
-	if used := res.Header.Get(rateUsedHeader); used != "" {
+	if used := resp.Header.Get(rateUsedHeader); used != "" {
 		if intUsed, err := strconv.Atoi(used); err == nil {
 			rl.Used = intUsed
 		}

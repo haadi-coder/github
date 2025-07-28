@@ -38,14 +38,14 @@ type APIErrorDetail struct {
 	Field string `json:"field,omitempty"`
 }
 
-func newAPIError(res *http.Response) error {
+func newAPIError(resp *http.Response) error {
 	apiErr := &APIError{
-		StatusCode: res.StatusCode,
+		StatusCode: resp.StatusCode,
 	}
 
-	err := json.NewDecoder(res.Body).Decode(apiErr)
+	err := json.NewDecoder(resp.Body).Decode(apiErr)
 	if err != nil {
-		apiErr.Message = fmt.Sprintf("request failed with status %d", res.StatusCode)
+		apiErr.Message = fmt.Sprintf("request failed with status %d", resp.StatusCode)
 	}
 
 	return apiErr

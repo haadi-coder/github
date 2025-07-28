@@ -17,11 +17,11 @@ type ListOptions struct {
 	PerPage int
 }
 
-func (lo *ListOptions) paginateQuery(q url.Values) {
+func (lo *ListOptions) Apply(v url.Values) {
 	if lo.Page != 0 {
-		q.Set("page", strconv.Itoa(lo.Page))
+		v.Set("page", strconv.Itoa(lo.Page))
 	}
 	if lo.PerPage != 0 {
-		q.Set("per_page", strconv.Itoa(lo.PerPage))
+		v.Set("per_page", strconv.Itoa(lo.PerPage))
 	}
 }

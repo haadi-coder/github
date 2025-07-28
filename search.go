@@ -38,24 +38,24 @@ type SearchOptions struct {
 func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
 	path := "search/repositories"
 
-	q := url.Values{}
+	v := url.Values{}
 	if opts != nil {
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Order != nil {
-			q.Set("order", *opts.Order)
+			v.Set("order", *opts.Order)
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
-	if len(q) != 0 {
+	if len(v) != 0 {
 		path += "&" + buildSearchParams(sq)
 	} else {
 		path += "?" + buildSearchParams(sq)
@@ -82,25 +82,25 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], error) {
 	path := "search/users"
 
-	q := url.Values{}
+	v := url.Values{}
 	if opts != nil {
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Order != nil {
-			q.Set("order", *opts.Order)
+			v.Set("order", *opts.Order)
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
-	if len(q) != 0 {
+	if len(v) != 0 {
 		path += "&" + buildSearchParams(sq)
 	} else {
 		path += "?" + buildSearchParams(sq)

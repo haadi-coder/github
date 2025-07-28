@@ -169,26 +169,26 @@ func TestParseLinkHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res := &Response{
+			resp := &Response{
 				Response: &http.Response{
 					Header: make(http.Header),
 				},
 			}
 			if tt.linkHeader != "" {
-				res.Header.Set("Link", tt.linkHeader)
+				resp.Header.Set("Link", tt.linkHeader)
 			}
 
-			err := parseLinkHeader(res)
+			err := parseLinkHeader(resp)
 
 			if (err != nil) != tt.expectError {
 				t.Fatalf("expected error: %v, got: %v", tt.expectError, err)
 			}
 
 			if !tt.expectError {
-				assert.Equal(t, res.PreviousPage, tt.expectedPrev)
-				assert.Equal(t, res.NextPage, tt.expectedNext)
-				assert.Equal(t, res.FirstPage, tt.expectedFirst)
-				assert.Equal(t, res.LastPage, tt.expectedLast)
+				assert.Equal(t, resp.PreviousPage, tt.expectedPrev)
+				assert.Equal(t, resp.NextPage, tt.expectedNext)
+				assert.Equal(t, resp.FirstPage, tt.expectedFirst)
+				assert.Equal(t, resp.LastPage, tt.expectedLast)
 			}
 		})
 	}
@@ -281,16 +281,16 @@ func TestBuildErrorResponse(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			var res *http.Response
+			var resp *http.Response
 			if tt.statusCode != 0 || tt.body != "" {
 				body := io.NopCloser(bytes.NewBufferString(tt.body))
-				res = &http.Response{
+				resp = &http.Response{
 					StatusCode: tt.statusCode,
 					Body:       body,
 				}
 			}
 
-			err := newAPIError(res)
+			err := newAPIError(resp)
 
 			if !tt.expectedErrIsNil {
 				assert.Error(t, err)

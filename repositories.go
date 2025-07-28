@@ -204,23 +204,23 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 	path := fmt.Sprintf("users/%s/repos", owner)
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Type != nil {
-			q.Set("type", *opts.Type)
+			v.Set("type", *opts.Type)
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 		if opts.Direction != nil {
-			q.Set("direction", *opts.Direction)
+			v.Set("direction", *opts.Direction)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
@@ -247,17 +247,17 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 	path := fmt.Sprintf("repos/%s/%s/contributors", owner, repo)
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Anon != nil {
-			q.Set("anon", *opts.Anon)
+			v.Set("anon", *opts.Anon)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 

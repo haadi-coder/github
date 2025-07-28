@@ -198,42 +198,42 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Assignee != nil {
-			q.Set("assignee", *opts.Assignee)
+			v.Set("assignee", *opts.Assignee)
 		}
 		if opts.Creator != nil {
-			q.Set("creator", *opts.Creator)
+			v.Set("creator", *opts.Creator)
 		}
 		if opts.Mentioned != nil {
-			q.Set("mentioned", *opts.Mentioned)
+			v.Set("mentioned", *opts.Mentioned)
 		}
 		if opts.State != nil {
-			q.Set("state", *opts.State)
+			v.Set("state", *opts.State)
 		}
 		if opts.Type != nil {
-			q.Set("type", *opts.Type)
+			v.Set("type", *opts.Type)
 		}
 		if len(opts.Labels) != 0 {
-			q.Set("labels", strings.Join(opts.Labels, ","))
+			v.Set("labels", strings.Join(opts.Labels, ","))
 		}
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
-			q.Set("since", string(t))
+			v.Set("since", string(t))
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 		if opts.Direction != nil {
-			q.Set("direction", *opts.Direction)
+			v.Set("direction", *opts.Direction)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
@@ -306,24 +306,24 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 	path := fmt.Sprintf("repos/%s/%s/issues/comments", owner, repo)
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
-			q.Set("since", string(t))
+			v.Set("since", string(t))
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 		if opts.Direction != nil {
-			q.Set("direction", *opts.Direction)
+			v.Set("direction", *opts.Direction)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 

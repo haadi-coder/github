@@ -37,17 +37,17 @@ type Response struct {
 }
 
 func buildResponse(hr *http.Response, rl *RateLimit) *Response {
-	res := &Response{
+	resp := &Response{
 		Response:  hr,
 		RateLimit: rl,
 	}
 
-	err := parseLinkHeader(res)
+	err := parseLinkHeader(resp)
 	if err != nil {
-		return res
+		return resp
 	}
 
-	return res
+	return resp
 }
 
 const (
@@ -57,8 +57,8 @@ const (
 	linkLast  = "last"
 )
 
-func parseLinkHeader(res *Response) error {
-	header := res.Header.Get("Link")
+func parseLinkHeader(resp *Response) error {
+	header := resp.Header.Get("Link")
 	if header == "" {
 		return errors.New("invalid Link Header")
 	}
@@ -83,13 +83,13 @@ func parseLinkHeader(res *Response) error {
 
 		switch rel {
 		case linkPrev:
-			res.PreviousPage = pageCount
+			resp.PreviousPage = pageCount
 		case linkNext:
-			res.NextPage = pageCount
+			resp.NextPage = pageCount
 		case linkFirst:
-			res.FirstPage = pageCount
+			resp.FirstPage = pageCount
 		case linkLast:
-			res.LastPage = pageCount
+			resp.LastPage = pageCount
 		default:
 			continue
 		}

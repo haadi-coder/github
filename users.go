@@ -90,16 +90,16 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	path := "users"
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Since != 0 {
-			q.Set("since", fmt.Sprintf("%d", opts.Since))
+			v.Set("since", fmt.Sprintf("%d", opts.Since))
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
@@ -158,11 +158,11 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 	path := "user/followers"
 
 	if opts != nil {
-		q := url.Values{}
-		opts.paginateQuery(q)
+		v := url.Values{}
+		opts.Apply(v)
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
@@ -187,11 +187,11 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 	path := "user/following"
 
 	if opts != nil {
-		q := url.Values{}
-		opts.paginateQuery(q)
+		v := url.Values{}
+		opts.Apply(v)
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 

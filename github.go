@@ -134,11 +134,7 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	req = req.WithContext(ctx)
 
-	if c.requestHook != nil {
-		c.requestHook(req)
-	}
-
-	var res *http.Response
+	var resp *http.Response
 	var err error
 	var rateLim *RateLimit
 
@@ -150,28 +146,32 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		default:
 		}
 
-		res, err = c.client.Do(req)
-		rateLim = getRateLimit(res)
+		if c.requestHook != nil {
+			c.requestHook(req)
+		}
+
+		resp, err = c.client.Do(req)
 		if err != nil {
 			return nil, err
 		}
 
+		rateLim = getRateLimit(resp)
 		if c.responseHook != nil {
-			c.responseHook(buildResponse(res, rateLim))
+			c.responseHook(buildResponse(resp, rateLim))
 		}
 
-		if (res.StatusCode == 403 || res.StatusCode == 429) && rateLim.Remaining == 0 {
+		if (resp.StatusCode == 403 || resp.StatusCode == 429) && rateLim.Remaining == 0 {
 			if !c.rateLimitRetry {
-				return buildResponse(res, rateLim), newAPIError(res)
+				return buildResponse(resp, rateLim), newAPIError(resp)
 			}
 
 			if c.rateLimitHandler != nil {
-				if err := c.rateLimitHandler(res); err != nil {
-					return buildResponse(res, rateLim), err
+				if err := c.rateLimitHandler(resp); err != nil {
+					return buildResponse(resp, rateLim), err
 				}
 				continue
 			}
-			_ = res.Body.Close()
+			_ = resp.Body.Close()
 
 			c.waitRateLimit(rateLim, atm)
 			continue
@@ -179,19 +179,19 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		break
 	}
 
-	response := buildResponse(res, rateLim)
+	response := buildResponse(resp, rateLim)
 
-	if res.StatusCode >= 400 {
-		return response, newAPIError(res)
+	if resp.StatusCode >= 400 {
+		return response, newAPIError(resp)
 	}
 
 	if v != nil {
-		if err := json.NewDecoder(res.Body).Decode(v); err != nil {
+		if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
 			return response, err
 		}
 	}
 
-	_ = res.Body.Close()
+	_ = resp.Body.Close()
 
 	return response, nil
 }

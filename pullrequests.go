@@ -182,29 +182,29 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
 
 	if opts != nil {
-		q := url.Values{}
+		v := url.Values{}
 
 		if opts.ListOptions != nil {
-			opts.paginateQuery(q)
+			opts.Apply(v)
 		}
 		if opts.Base != nil {
-			q.Set("base", *opts.Base)
+			v.Set("base", *opts.Base)
 		}
 		if opts.Direction != nil {
-			q.Set("direction", *opts.Direction)
+			v.Set("direction", *opts.Direction)
 		}
 		if opts.Head != nil {
-			q.Set("head", *opts.Head)
+			v.Set("head", *opts.Head)
 		}
 		if opts.Sort != nil {
-			q.Set("sort", *opts.Sort)
+			v.Set("sort", *opts.Sort)
 		}
 		if opts.State != nil {
-			q.Set("state", *opts.State)
+			v.Set("state", *opts.State)
 		}
 
-		if len(q) != 0 {
-			path += "?" + q.Encode()
+		if len(v) != 0 {
+			path += "?" + v.Encode()
 		}
 	}
 
