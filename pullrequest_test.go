@@ -54,6 +54,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
@@ -67,10 +68,11 @@ func TestPullRequestsService_Get(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			pr, err := client.PullRequests.Get(context.Background(), tt.owner, tt.repoName, tt.pullNum)
+			pr, resp, err := client.PullRequests.Get(context.Background(), tt.owner, tt.repoName, tt.pullNum)
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
 	}
@@ -140,10 +142,11 @@ func TestPullRequestsService_Create(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			pr, err := client.PullRequests.Create(context.Background(), tt.owner, tt.repoName, tt.body)
+			pr, resp, err := client.PullRequests.Create(context.Background(), tt.owner, tt.repoName, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
+			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
 	}
@@ -213,10 +216,11 @@ func TestPullRequestsService_Update(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			pr, err := client.PullRequests.Update(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
+			pr, resp, err := client.PullRequests.Update(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, pr)
 
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
 	}
@@ -280,10 +284,11 @@ func TestPullRequestsService_Merge(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			merge, err := client.PullRequests.Merge(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
+			merge, resp, err := client.PullRequests.Merge(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, merge)
 
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, merge)
 		})
 	}

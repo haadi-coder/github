@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"slices"
 	"time"
 )
 
@@ -164,7 +163,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			c.responseHook(response)
 		}
 
-		if checkRetry(resp.StatusCode, rateLim.Remaining) {
+		if checkRetry(response) {
 			if !c.rateLimitRetry {
 				return response, newAPIError(resp)
 			}
@@ -181,12 +180,15 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 				return response, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
 			}
 
-			err = c.waitRateLimit(ctx, rateLim, atm)
-			if err != nil {
-				return response, err
+			waitTime := calculateBackoff(atm, c.retryWaitMin, c.retryWaitMax, rateLim.Reset)
+			select {
+			case <-ctx.Done():
+				return response, ctx.Err()
+			case <-time.After(waitTime):
+				return response, nil
+			default:
+				continue
 			}
-
-			continue
 		}
 		break
 	}
@@ -206,27 +208,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	return response, nil
 }
 
-func (c *Client) waitRateLimit(ctx context.Context, rl *RateLimit, attempt int) error {
-	var waitTime time.Duration
-	if rl.Reset != 0 {
-		resetTime := time.Unix(rl.Reset, 0)
-		waitTime = time.Until(resetTime)
-
-		if waitTime < 0 {
-			waitTime = time.Second
-		}
-	} else {
-		waitTime = calculateBackoff(attempt, c.retryWaitMin, c.retryWaitMax)
+func checkRetry(res *Response) bool {
+	if (res.StatusCode == http.StatusForbidden || res.StatusCode == http.StatusTooManyRequests) && res.Remaining == 0 {
+		return true
 	}
 
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-time.After(waitTime):
-		return nil
+	if res.StatusCode == http.StatusInternalServerError || res.StatusCode == http.StatusBadGateway || res.StatusCode == http.StatusServiceUnavailable {
+		return true
 	}
-}
 
-func checkRetry(statusCode int, regithubing int) bool {
-	return slices.Contains(rateLimitStatusCodes, statusCode) && regithubing == 0
+	return false
 }

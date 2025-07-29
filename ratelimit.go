@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,8 +54,6 @@ const (
 	rateUsedHeader     = "X-RateLimit-Used"
 )
 
-var rateLimitStatusCodes = []int{403, 429, 500, 502}
-
 // Get retrieves the current rate limit status for the authenticated user.
 // This method returns detailed information about rate limits for all
 // API resources, including how many requests have been made, how many
@@ -107,18 +104,15 @@ func getRateLimit(resp *http.Response) *RateLimit {
 	return &rl
 }
 
-func calculateBackoff(attempt int, waitMin time.Duration, waitMax time.Duration) time.Duration {
-	if waitMin.Seconds() == 0 {
-		waitMin = time.Second
-	}
-	if waitMax.Seconds() == 0 {
-		waitMax = 60 * time.Second
+func calculateBackoff(attempt int, waitMin time.Duration, waitMax time.Duration, reset int64) time.Duration {
+	if reset != 0 {
+		resetTime := time.Unix(reset, 0)
+		waitTime := time.Until(resetTime)
+
+		return waitTime
 	}
 
-	wait := waitMin.Seconds() * math.Pow(2, float64(attempt))
-	if wait > waitMax.Seconds() {
-		wait = waitMax.Seconds()
-	}
+	wait := waitMin << attempt
 
-	return time.Duration(wait * float64(time.Second))
+	return min(wait, waitMax)
 }

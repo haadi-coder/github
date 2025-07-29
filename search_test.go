@@ -23,7 +23,7 @@ func TestSearch_Repositories(t *testing.T) {
 		expected     *Search[Repository]
 	}{
 		{
-			name:        "Полный поиск репозиториев",
+			name:        "Full repository search",
 			searchQuery: "go lang",
 			opts: &SearchOptions{
 				ListOptions: &ListOptions{Page: 2, PerPage: 50},
@@ -43,7 +43,7 @@ func TestSearch_Repositories(t *testing.T) {
 			},
 		},
 		{
-			name:        "Пустой поиск",
+			name:        "Empty search",
 			searchQuery: "",
 			opts:        nil,
 			expectedURL: "/search/repositories?q=",
@@ -59,7 +59,7 @@ func TestSearch_Repositories(t *testing.T) {
 			},
 		},
 		{
-			name:        "Ошибка сервера",
+			name:        "Server error",
 			searchQuery: "go",
 			opts:        nil,
 			expectedURL: "/search/repositories?q=go",
@@ -72,6 +72,7 @@ func TestSearch_Repositories(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -89,7 +90,7 @@ func TestSearch_Repositories(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			result, err := client.Search.Repositories(context.Background(), tt.searchQuery, tt.opts)
+			result, resp, err := client.Search.Repositories(context.Background(), tt.searchQuery, tt.opts)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -99,6 +100,8 @@ func TestSearch_Repositories(t *testing.T) {
 
 			assert.Equal(t, tt.expected.TotalCount, result.TotalCount)
 			assert.Equal(t, tt.expected.IncompleteResults, result.IncompleteResults)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+
 			assert.Len(t, result.Items, len(tt.expected.Items))
 			if len(tt.expected.Items) > 0 {
 				assert.Equal(t, tt.expected.Items, result.Items)
@@ -182,7 +185,7 @@ func TestSearch_Users(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			result, err := client.Search.Users(context.Background(), tt.searchQuery, tt.opts)
+			result, resp, err := client.Search.Users(context.Background(), tt.searchQuery, tt.opts)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -192,7 +195,9 @@ func TestSearch_Users(t *testing.T) {
 
 			assert.Equal(t, tt.expected.TotalCount, result.TotalCount)
 			assert.Equal(t, tt.expected.IncompleteResults, result.IncompleteResults)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Len(t, result.Items, len(tt.expected.Items))
+
 			if len(tt.expected.Items) > 0 {
 				assert.Equal(t, tt.expected.Items, result.Items)
 			}

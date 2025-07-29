@@ -37,6 +37,7 @@ func TestUsersService_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
@@ -50,10 +51,11 @@ func TestUsersService_Get(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			user, err := client.User.Get(context.Background(), "testuser")
+			user, resp, err := client.User.Get(context.Background(), "testuser")
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
+				assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			} else {
 				require.Error(t, err)
 			}
@@ -113,10 +115,11 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
 			require.NoError(t, err)
 
-			user, err := client.User.GetAuthenticated(context.Background())
+			user, resp, err := client.User.GetAuthenticated(context.Background())
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
+				assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			} else {
 				require.Error(t, err)
 			}
@@ -251,10 +254,11 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			var body UserUpdateRequest
 			_ = json.Unmarshal([]byte(tt.requestBody), &body)
 
-			user, err := client.User.UpdateAuthenticated(context.Background(), body)
+			user, resp, err := client.User.UpdateAuthenticated(context.Background(), body)
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
+				assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			} else {
 				require.Error(t, err)
 			}
@@ -389,13 +393,14 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.isFollow {
-				err = client.User.Follow(context.Background(), "testuser")
+				_, err = client.User.Follow(context.Background(), "testuser")
 			} else {
-				err = client.User.Unfollow(context.Background(), "testuser")
+				_, err = client.User.Unfollow(context.Background(), "testuser")
 			}
 
 			if tt.responseStatus == http.StatusNoContent {
 				require.NoError(t, err)
+
 			} else {
 				require.Error(t, err)
 			}

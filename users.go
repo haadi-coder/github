@@ -39,40 +39,42 @@ type User struct {
 // This method returns public profile information for any GitHub user,
 // including their name, company, location, bio, and various statistics
 // such as follower count and public repository count.
-func (s *UsersService) Get(ctx context.Context, username string) (*User, error) {
+func (s *UsersService) Get(ctx context.Context, username string) (*User, *Response, error) {
 	path := fmt.Sprintf("users/%s", username)
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, user)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return user, nil
+	return user, resp, nil
 }
 
 // GetAuthenticated retrieves information about the currently authenticated user.
 // This method returns detailed profile information for the authenticated user,
 // including private information that is only available when authenticated.
 // It requires proper authentication credentials to be configured in the client.
-func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, error) {
+func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, *Response, error) {
 	path := "user"
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, user)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return user, nil
+	return user, resp, nil
 }
 
 // UsersListOptions specifies the optional parameters to list users.
@@ -135,20 +137,21 @@ type UserUpdateRequest struct {
 // currently authenticated user, including name, email, company,
 // location, bio, and other profile fields. Only the provided
 // fields will be updated.
-func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, error) {
+func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateRequest) (*User, *Response, error) {
 	path := "user"
 
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	user := new(User)
-	if _, err := s.client.Do(ctx, req, user); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, user)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return user, nil
+	return user, resp, nil
 }
 
 // ListAuthenticatedUserFollowers retrieves the followers of the authenticated user.
@@ -214,36 +217,38 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 // Once followed, the target user will appear in the authenticated user's
 // following list, and the authenticated user will appear in the target
 // user's followers list.
-func (s *UsersService) Follow(ctx context.Context, username string) error {
+func (s *UsersService) Follow(ctx context.Context, username string) (*Response, error) {
 	path := fmt.Sprintf("user/following/%s", username)
 
 	req, err := s.client.NewRequest(http.MethodPut, path, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+	resp, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }
 
 // Unfollow stops following a user.
 // This method allows the authenticated user to unfollow a GitHub user
 // they were previously following. This will remove the relationship
 // between the users.
-func (s *UsersService) Unfollow(ctx context.Context, username string) error {
+func (s *UsersService) Unfollow(ctx context.Context, username string) (*Response, error) {
 	path := fmt.Sprintf("user/following/%s", username)
 
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+	resp, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }

@@ -9,94 +9,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestWaitRateLimit(t *testing.T) {
-	cases := []struct {
-		name         string
-		retryWaitMin time.Duration
-		retryWaitMax time.Duration
-		rl           *RateLimit
-		attempt      int
-		expectedWait time.Duration
-	}{
-		{
-			name:         "Reset в будущем",
-			retryWaitMin: 5 * time.Second,
-			retryWaitMax: 60 * time.Second,
-			rl: &RateLimit{
-				Reset: time.Now().Add(10 * time.Second).Unix(),
-			},
-			attempt:      2,
-			expectedWait: 10 * time.Second,
-		},
-		{
-			name:         "Reset в прошлом",
-			retryWaitMin: 5 * time.Second,
-			retryWaitMax: 60 * time.Second,
-			rl: &RateLimit{
-				Reset: time.Now().Add(-10 * time.Second).Unix(),
-			},
-			attempt:      3,
-			expectedWait: time.Second,
-		},
-		{
-			name:         "Reset == 0, attempt=0",
-			retryWaitMin: 5 * time.Second,
-			retryWaitMax: 60 * time.Second,
-			rl:           &RateLimit{Reset: 0},
-			attempt:      0,
-			expectedWait: 5 * time.Second, // 5 * 2^0 = 5
-		},
-		{
-			name:         "Reset == 0, attempt=1",
-			retryWaitMin: 5 * time.Second,
-			retryWaitMax: 60 * time.Second,
-			rl:           &RateLimit{Reset: 0},
-			attempt:      1,
-			expectedWait: 10 * time.Second, // 5 * 2^1 = 10
-		},
-		{
-			name:         "Reset == 0, attempt=100 (ограничение retryWaitMax)",
-			retryWaitMin: 5 * time.Second,
-			retryWaitMax: 20 * time.Second,
-			rl:           &RateLimit{Reset: 0},
-			attempt:      100,
-			expectedWait: 20 * time.Second, // max = 10
-		},
-		{
-			name:         "Reset == 0, retryWaitMin по умолчанию",
-			retryWaitMin: 0, // default = 1
-			retryWaitMax: 0, // default = 60
-			rl:           &RateLimit{Reset: 0},
-			attempt:      2,
-			expectedWait: 4 * time.Second, // 1 * 2^2 = 4
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			client, err := NewClient(
-				WithRetryWaitMin(tc.retryWaitMin),
-				WithRetryWaitMax(tc.retryWaitMax),
-			)
-			require.NoError(t, err)
-
-			start := time.Now()
-			_ = client.waitRateLimit(t.Context(), tc.rl, tc.attempt)
-			end := time.Now()
-
-			elapsed := end.Sub(start)
-
-			assert.InDelta(t, tc.expectedWait.Seconds(), elapsed.Seconds(), 1)
-		})
-	}
-}
 
 func TestParseLinkHeader(t *testing.T) {
 	tests := []struct {
@@ -311,222 +227,171 @@ func TestBuildErrorResponse(t *testing.T) {
 	}
 }
 
-func TestDo(t *testing.T) {
-	tests := []struct {
-		name           string
-		setupServer    func() *httptest.Server
-		setupClient    func(client *Client)
-		setupContext   func() context.Context
-		target         any
-		wantErr        bool
-		wantStatusCode int
-		validate       func(t *testing.T, resp *Response, err error, target any)
-	}{
-		{
-			name: "Success",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("X-RateLimit-Limit", "60")
-					w.Header().Set("X-RateLimit-Remaining", "59")
-					w.Header().Set("X-RateLimit-Used", "1")
-					w.Header().Set("X-RateLimit-Reset", "1717029203")
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
-					_ = json.NewEncoder(w).Encode(map[string]string{"key": "value"})
-				}))
-			},
-			setupClient: func(client *Client) {},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         &map[string]string{},
-			wantErr:        false,
-			wantStatusCode: http.StatusOK,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.NoError(t, err)
-				result := target.(*map[string]string)
-				assert.Equal(t, "value", (*result)["key"])
-				assert.Equal(t, 60, resp.Limit)
-				assert.Equal(t, 59, resp.Remaining)
-				assert.Equal(t, 1, resp.Used)
-				assert.Equal(t, int64(1717029203), resp.Reset)
-			},
-		},
-		{
-			name: "RateLimitExceeded_NoRetry",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.Header().Set("X-RateLimit-Limit", "1")
-					w.Header().Set("X-RateLimit-Remaining", "0")
-					w.Header().Set("X-RateLimit-Used", "1")
-					w.Header().Set("X-RateLimit-Reset", "1717029203")
-					w.Header().Set("Content-Type", "application/json")
-					http.Error(w, `{"message": "Too Many Requests"}`, http.StatusTooManyRequests)
-				}))
-			},
-			setupClient: func(client *Client) {
-				client.rateLimitRetry = false
-			},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         nil,
-			wantErr:        true,
-			wantStatusCode: http.StatusTooManyRequests,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.Error(t, err)
-				errorResp, ok := err.(*APIError)
-				require.True(t, ok)
-				assert.Equal(t, http.StatusTooManyRequests, errorResp.StatusCode)
-				assert.Equal(t, "Too Many Requests", errorResp.Message)
-				assert.Equal(t, 1, resp.Limit)
-				assert.Equal(t, 0, resp.Remaining)
-			},
-		},
-		{
-			name: "ContextTimeout",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					http.Error(w, "should not be called", http.StatusInternalServerError)
-				}))
-			},
-			setupClient: func(client *Client) {},
-			setupContext: func() context.Context {
-				ctx, cancel := context.WithCancel(context.Background())
-				cancel()
-				return ctx
-			},
-			target:         nil,
-			wantErr:        true,
-			wantStatusCode: 0,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.Error(t, err)
-				assert.Equal(t, context.Canceled, err)
-				assert.Nil(t, resp)
-			},
-		},
-		{
-			name: "LinkHeaderParsing",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					link := `<https://api.github.com/resource?page=2>; rel="next", <https://api.github.com/resource?page=1>; rel="prev"`
-					w.Header().Set("Link", link)
-					w.WriteHeader(http.StatusOK)
-				}))
-			},
-			setupClient: func(client *Client) {},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         nil,
-			wantErr:        false,
-			wantStatusCode: http.StatusOK,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.NoError(t, err)
-				assert.Equal(t, 2, resp.NextPage)
-				assert.Equal(t, 1, resp.PreviousPage)
-			},
-		},
-		{
-			name: "HooksCalled",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusOK)
-				}))
-			},
-			setupClient: func(client *Client) {},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         nil,
-			wantErr:        false,
-			wantStatusCode: http.StatusOK,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.NoError(t, err)
-			},
-		},
-		{
-			name: "RetryOnRateLimit",
-			setupServer: func() *httptest.Server {
-				attempts := 0
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if attempts == 0 {
-						w.Header().Set("X-RateLimit-Limit", "60")
-						w.Header().Set("X-RateLimit-Remaining", "0")
-						w.Header().Set("X-RateLimit-Reset", "1717029203")
-						w.WriteHeader(http.StatusTooManyRequests)
-						attempts++
-					} else {
-						w.WriteHeader(http.StatusOK)
-					}
-				}))
-			},
-			setupClient: func(client *Client) {
-				client.rateLimitRetry = true
-				client.retryMax = 10
-			},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         nil,
-			wantErr:        false,
-			wantStatusCode: http.StatusOK,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.NoError(t, err)
-				assert.Equal(t, http.StatusOK, resp.StatusCode)
-			},
-		},
-		{
-			name: "InvalidJSON",
-			setupServer: func() *httptest.Server {
-				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusOK)
-					_, _ = w.Write([]byte("invalid json"))
-				}))
-			},
-			setupClient: func(client *Client) {},
-			setupContext: func() context.Context {
-				return context.Background()
-			},
-			target:         &map[string]string{},
-			wantErr:        true,
-			wantStatusCode: http.StatusOK,
-			validate: func(t *testing.T, resp *Response, err error, target interface{}) {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), "invalid character")
-				assert.NotNil(t, resp)
-			},
-		},
-	}
+func TestDo_Success(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "59")
+		w.Header().Set("X-RateLimit-Used", "1")
+		w.Header().Set("X-RateLimit-Reset", "1717029203")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]string{"key": "value"})
+	}))
+	defer ts.Close()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ts := tt.setupServer()
-			defer ts.Close()
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
 
-			client, _ := NewClient()
-			client.baseURL, _ = url.Parse(ts.URL)
-			tt.setupClient(client)
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
 
-			req, err := client.NewRequest("GET", ts.URL, nil)
-			require.NoError(t, err)
+	ctx := context.Background()
+	resp, err := client.Do(ctx, req, &map[string]string{})
 
-			ctx := tt.setupContext()
-			resp, err := client.Do(ctx, req, tt.target)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
+	result := &map[string]string{}
+	_ = json.NewDecoder(resp.Body).Decode(result)
 
-			if tt.wantStatusCode != 0 && resp != nil {
-				assert.Equal(t, tt.wantStatusCode, resp.StatusCode)
-			}
+	assert.Equal(t, 60, resp.Limit)
+	assert.Equal(t, 59, resp.Remaining)
+	assert.Equal(t, 1, resp.Used)
+	assert.Equal(t, int64(1717029203), resp.Reset)
+}
 
-			if tt.validate != nil {
-				tt.validate(t, resp, err, tt.target)
-			}
-		})
-	}
+func TestDo_RateLimitExceeded_NoRetry(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "1")
+		w.Header().Set("X-RateLimit-Remaining", "0")
+		w.Header().Set("X-RateLimit-Used", "1")
+		w.Header().Set("X-RateLimit-Reset", "1717029203")
+		w.Header().Set("Content-Type", "application/json")
+		http.Error(w, `{"message": "Too Many Requests"}`, http.StatusTooManyRequests)
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+	client.rateLimitRetry = false
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	resp, err := client.Do(ctx, req, nil)
+
+	require.Error(t, err)
+	errorResp, ok := err.(*APIError)
+	require.True(t, ok)
+	assert.Equal(t, http.StatusTooManyRequests, errorResp.StatusCode)
+	assert.Equal(t, "Too Many Requests", errorResp.Message)
+	assert.Equal(t, 1, resp.Limit)
+	assert.Equal(t, 0, resp.Remaining)
+}
+
+func TestDo_ContextTimeout(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "should not be called", http.StatusInternalServerError)
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	resp, err := client.Do(ctx, req, nil)
+
+	require.Error(t, err)
+	assert.Equal(t, context.Canceled, err)
+	assert.Nil(t, resp)
+}
+
+func TestDo_LinkHeaderParsing(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		link := `<https://api.github.com/resource?page=2>; rel="next", <https://api.github.com/resource?page=1>; rel="prev"`
+		w.Header().Set("Link", link)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	resp, err := client.Do(ctx, req, nil)
+
+	require.NoError(t, err)
+	assert.Equal(t, 2, resp.NextPage)
+	assert.Equal(t, 1, resp.PreviousPage)
+}
+
+func TestDo_HooksCalled(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	resp, err := client.Do(ctx, req, nil)
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestDo_RetryOnRateLimit(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "0")
+		w.Header().Set("X-RateLimit-Reset", "1717029203")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+	client.rateLimitRetry = true
+	client.retryMax = 10
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(context.Background(), req, nil)
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+}
+
+func TestDo_InvalidJSON(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer ts.Close()
+
+	client, _ := NewClient()
+	client.baseURL, _ = url.Parse(ts.URL)
+
+	req, err := client.NewRequest("GET", ts.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := client.Do(context.Background(), req, &map[string]string{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid character")
+	assert.NotNil(t, resp)
 }

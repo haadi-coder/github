@@ -35,7 +35,7 @@ type SearchOptions struct {
 // syntax. You can filter by various criteria such as language, stars,
 // forks, and more. The results can be sorted and paginated using
 // the SearchOptions parameter.
-func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], error) {
+func (s *SearchService) Repositories(ctx context.Context, sq string, opts *SearchOptions) (*Search[Repository], *Response, error) {
 	path := "search/repositories"
 
 	v := url.Values{}
@@ -63,15 +63,16 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	search := new(Search[Repository])
-	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, search)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return search, nil
+	return search, resp, nil
 }
 
 // Users searches for users based on the provided query.
@@ -79,7 +80,7 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 // search criteria such as username, full name, location, and followers.
 // The results can be sorted by different fields and paginated using
 // the SearchOptions parameter.
-func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], error) {
+func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOptions) (*Search[User], *Response, error) {
 	path := "search/users"
 
 	v := url.Values{}
@@ -108,15 +109,16 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	search := new(Search[User])
-	if _, err := s.client.Do(ctx, req, search); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, search)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return search, nil
+	return search, resp, nil
 }
 
 func buildSearchParams(s string) string {

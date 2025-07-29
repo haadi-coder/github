@@ -69,6 +69,7 @@ func TestIssuesService_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
@@ -82,10 +83,11 @@ func TestIssuesService_Get(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			issue, err := client.Issues.Get(context.Background(), tt.owner, tt.repoName, tt.issueNum)
+			issue, resp, err := client.Issues.Get(context.Background(), tt.owner, tt.repoName, tt.issueNum)
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
 	}
@@ -151,10 +153,11 @@ func TestIssuesService_Create(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			issue, err := client.Issues.Create(context.Background(), tt.owner, tt.repoName, tt.body)
+			issue, resp, err := client.Issues.Create(context.Background(), tt.owner, tt.repoName, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
+			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
 	}
@@ -220,10 +223,11 @@ func TestIssuesService_Update(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			issue, err := client.Issues.Update(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
+			issue, resp, err := client.Issues.Update(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, issue)
 
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
 	}
@@ -288,9 +292,9 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.isLock {
-				err = client.Issues.Lock(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
+				_, err = client.Issues.Lock(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			} else {
-				err = client.Issues.Unlock(context.Background(), tt.owner, tt.repoName, tt.issueNum)
+				_, err = client.Issues.Unlock(context.Background(), tt.owner, tt.repoName, tt.issueNum)
 			}
 			require.NoError(t, err)
 		})
@@ -407,10 +411,11 @@ func TestIssuesService_CreateComment(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			comment, err := client.Issues.CreateComment(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
+			comment, resp, err := client.Issues.CreateComment(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			require.NoError(t, err)
 			require.NotNil(t, comment)
 
+			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, comment)
 		})
 	}

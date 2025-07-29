@@ -56,19 +56,20 @@ type Repository struct {
 // Get fetches a repository by its owner and name.
 // This method retrieves detailed information about a specific repository,
 // including its metadata, statistics, and permissions for the authenticated user.
-func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, error) {
+func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	r := new(Repository)
-	if _, err = s.client.Do(ctx, req, r); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, r)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return r, nil
+	return r, resp, nil
 }
 
 // RepositoryUpdateRequest represents the request body for updating a repository.
@@ -103,37 +104,39 @@ type RepositoryUpdateRequest struct {
 // This method allows you to update various settings and metadata of a repository
 // such as its name, description, visibility, merge settings, and other configuration
 // options. Only the provided fields will be updated.
-func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, error) {
+func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	r := new(Repository)
-	if _, err = s.client.Do(ctx, req, r); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, r)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return r, nil
+	return r, resp, nil
 }
 
 // Delete removes a repository permanently.
 // This method deletes the specified repository. This action cannot be undone,
 // and all data including issues, pull requests, and wiki pages will be lost.
 // Note that this requires admin permissions on the repository.
-func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) error {
+func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+	resp, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }
 
 // RepositoryCreateRequest represents the request body for creating a repository.
@@ -169,20 +172,21 @@ type RepositoryCreateRequest struct {
 // configuration options such as description, visibility, initialization
 // settings, and merge preferences. The repository will be owned by
 // the authenticated user.
-func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateRequest) (*Repository, error) {
+func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateRequest) (*Repository, *Response, error) {
 	path := "user/repos"
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	repo := new(Repository)
-	if _, err = s.client.Do(ctx, req, repo); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, repo)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return repo, nil
+	return repo, resp, nil
 }
 
 // RepositoryListOptions specifies the optional parameters to list repositories.

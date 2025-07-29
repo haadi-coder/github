@@ -97,6 +97,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
@@ -111,7 +112,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
 			require.NoError(t, err)
 
-			repo, err := client.Repositories.Get(context.Background(), tt.owner, tt.repoName)
+			repo, resp, err := client.Repositories.Get(context.Background(), tt.owner, tt.repoName)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -119,6 +120,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
+			assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			assert.Equal(t, tt.expected, repo)
 		})
 	}
@@ -188,7 +190,7 @@ func TestRepositoriesService_Create(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
 			require.NoError(t, err)
 
-			repo, err := client.Repositories.Create(context.Background(), tt.body)
+			repo, resp, err := client.Repositories.Create(context.Background(), tt.body)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -196,6 +198,7 @@ func TestRepositoriesService_Create(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
+			assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			assert.Equal(t, tt.expected, repo)
 		})
 	}
@@ -268,7 +271,7 @@ func TestRepositoriesService_Update(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
 			require.NoError(t, err)
 
-			repo, err := client.Repositories.Update(context.Background(), tt.owner, tt.repoName, tt.body)
+			repo, resp, err := client.Repositories.Update(context.Background(), tt.owner, tt.repoName, tt.body)
 			if tt.expectError {
 				require.Error(t, err)
 				return
@@ -276,6 +279,7 @@ func TestRepositoriesService_Update(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
+			assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			assert.Equal(t, tt.expected, repo)
 		})
 	}
@@ -323,11 +327,12 @@ func TestRepositoriesService_Delete(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
 			require.NoError(t, err)
 
-			err = client.Repositories.Delete(context.Background(), tt.owner, tt.repoName)
+			resp, err := client.Repositories.Delete(context.Background(), tt.owner, tt.repoName)
 			if tt.expectError {
 				require.Error(t, err)
 				return
 			}
+			assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			require.NoError(t, err)
 		})
 	}

@@ -50,20 +50,21 @@ type Issue struct {
 // This method retrieves detailed information about a specific issue,
 // including its title, body, labels, assignees, and other metadata.
 // The issue number is the unique identifier within the repository.
-func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, error) {
+func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issueNum int) (*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	issue := new(Issue)
-	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, issue)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return issue, nil
+	return issue, resp, nil
 }
 
 // IssueCreateRequest represents the request body for creating an issue.
@@ -82,20 +83,21 @@ type IssueCreateRequest struct {
 // This method allows you to create a new issue with specified title, body,
 // assignees, labels, and other optional parameters. The created issue
 // will be owned by the specified repository owner and repository name.
-func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, error) {
+func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	issue := new(Issue)
-	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, issue)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return issue, nil
+	return issue, resp, nil
 }
 
 // IssueUpdateRequest represents the request body for updating an issue.
@@ -116,20 +118,21 @@ type IssueUpdateRequest struct {
 // This method allows you to modify an existing issue by its number.
 // You can update the title, body, assignees, labels, state, and other
 // properties of the issue. Only provided fields will be updated.
-func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, error) {
+func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	issue := new(Issue)
-	if _, err = s.client.Do(ctx, req, issue); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, issue)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return issue, nil
+	return issue, resp, nil
 }
 
 // IssueLockRequest represents the request body for locking an issue.
@@ -142,36 +145,38 @@ type IssueLockRequest struct {
 // This method prevents non-collaborators from commenting on the issue.
 // You can optionally specify a lock reason such as "off-topic", "too heated",
 // "resolved", or "spam" to provide context for why the issue was locked.
-func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) error {
+func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+	resp, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }
 
 // Unlock unlocks a previously locked issue.
 // This method removes the lock from an issue, allowing all users
 // (including non-collaborators) to comment on it again.
-func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, issueNum int) error {
+func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, issueNum int) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err = s.client.Do(ctx, req, nil); err != nil {
-		return err
+	resp, err := s.client.Do(ctx, req, nil)
+	if err != nil {
+		return resp, err
 	}
 
-	return nil
+	return resp, nil
 }
 
 // IssueListOptions specifies the optional parameters to various List methods that support pagination.
@@ -273,20 +278,21 @@ type IssueComment struct {
 // This method adds a new comment to the specified issue. The comment
 // will be authored by the authenticated user and will appear in the
 // issue's comment thread.
-func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, error) {
+func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	comment := new(IssueComment)
-	if _, err = s.client.Do(ctx, req, comment); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, comment)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return comment, nil
+	return comment, resp, nil
 }
 
 // IssueCommentListOptions specifies the optional parameters to list issue comments.

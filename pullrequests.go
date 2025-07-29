@@ -45,20 +45,21 @@ type PullRequest struct {
 // This method retrieves detailed information about a specific pull request,
 // including its title, description, status, participants, and related metadata.
 // The pull request number is the unique identifier within the repository.
-func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, error) {
+func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pr := new(PullRequest)
-	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, pr)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return pr, nil
+	return pr, resp, nil
 }
 
 // PullRequestCreateRequest represents the request body for creating a pull request.
@@ -79,20 +80,21 @@ type PullRequestCreateRequest struct {
 // branch (head) and target branch (base). You can also provide a title, description,
 // and other optional parameters. The created pull request will be owned by the
 // specified repository owner and repository name.
-func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, error) {
+func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pr := new(PullRequest)
-	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, pr)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return pr, nil
+	return pr, resp, nil
 }
 
 // PullRequestUpdateRequest represents the request body for updating a pull request.
@@ -109,20 +111,21 @@ type PullRequestUpdateRequest struct {
 // This method allows you to modify an existing pull request by its number.
 // You can update the title, description, target branch, state, and other
 // properties of the pull request. Only provided fields will be updated.
-func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, error) {
+func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pr := new(PullRequest)
-	if _, err = s.client.Do(ctx, req, pr); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, pr)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return pr, nil
+	return pr, resp, nil
 }
 
 // MergeRequest represents the request body for merging a pull request.
@@ -147,20 +150,21 @@ type Merge struct {
 // You can specify the merge method (merge, squash, or rebase), commit title,
 // commit message, and the specific SHA to merge. The method returns information
 // about the merge operation including the resulting commit SHA.
-func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, error) {
+func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	merge := new(Merge)
-	if _, err = s.client.Do(ctx, req, merge); err != nil {
-		return nil, err
+	resp, err := s.client.Do(ctx, req, merge)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	return merge, nil
+	return merge, resp, nil
 }
 
 // PullRequestListOptions specifies the optional parameters to list pull requests.
