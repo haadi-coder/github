@@ -434,7 +434,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 				ListOptions: &ListOptions{Page: 1, PerPage: 30},
 				Since:       &Timestamp{time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)},
 			},
-			expectedURL:  "/repos/octocat/Hello-World/issues/comments?page=1&per_page=30&since=2023-10-10T12:00:00Z",
+			expectedURL:  `/repos/octocat/Hello-World/issues/comments?page=1&per_page=30&since="2023-10-10T12:00:00Z"`,
 			responseBody: `[{"id":1,"body":"Comment 1"},{"id":2,"body":"Comment 2"}]`,
 			expected: []*IssueComment{
 				{ID: 1, Body: "Comment 1"},

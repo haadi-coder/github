@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"time"
 )
 
@@ -137,6 +138,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	var resp *http.Response
 	var err error
 	var rateLim *RateLimit
+	var response *Response
 
 	maxAtm := max(c.retryMax, 1)
 	for atm := range maxAtm {
@@ -156,30 +158,38 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		rateLim = getRateLimit(resp)
+		response = buildResponse(resp, rateLim)
+
 		if c.responseHook != nil {
-			c.responseHook(buildResponse(resp, rateLim))
+			c.responseHook(response)
 		}
 
-		if (resp.StatusCode == 403 || resp.StatusCode == 429) && rateLim.Remaining == 0 {
+		if checkRetry(resp.StatusCode, rateLim.Remaining) {
 			if !c.rateLimitRetry {
-				return buildResponse(resp, rateLim), newAPIError(resp)
+				return response, newAPIError(resp)
 			}
 
 			if c.rateLimitHandler != nil {
 				if err := c.rateLimitHandler(resp); err != nil {
-					return buildResponse(resp, rateLim), err
+					return response, err
 				}
 				continue
 			}
 			_ = resp.Body.Close()
 
-			c.waitRateLimit(rateLim, atm)
+			if atm >= maxAtm-1 {
+				return response, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
+			}
+
+			err = c.waitRateLimit(ctx, rateLim, atm)
+			if err != nil {
+				return response, err
+			}
+
 			continue
 		}
 		break
 	}
-
-	response := buildResponse(resp, rateLim)
 
 	if resp.StatusCode >= 400 {
 		return response, newAPIError(resp)
@@ -196,7 +206,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	return response, nil
 }
 
-func (c *Client) waitRateLimit(rl *RateLimit, attempt int) {
+func (c *Client) waitRateLimit(ctx context.Context, rl *RateLimit, attempt int) error {
 	var waitTime time.Duration
 	if rl.Reset != 0 {
 		resetTime := time.Unix(rl.Reset, 0)
@@ -206,8 +216,17 @@ func (c *Client) waitRateLimit(rl *RateLimit, attempt int) {
 			waitTime = time.Second
 		}
 	} else {
-		waitTime = c.calculateBackoff(attempt)
+		waitTime = calculateBackoff(attempt, c.retryWaitMin, c.retryWaitMax)
 	}
 
-	time.Sleep(waitTime)
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(waitTime):
+		return nil
+	}
+}
+
+func checkRetry(statusCode int, regithubing int) bool {
+	return slices.Contains(rateLimitStatusCodes, statusCode) && regithubing == 0
 }

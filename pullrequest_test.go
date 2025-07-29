@@ -94,7 +94,7 @@ func TestPullRequestsService_Create(t *testing.T) {
 			owner:    "octocat",
 			repoName: "Hello-World",
 			body: &PullRequestCreateRequest{
-				Head:  "main",
+				Head:  "github",
 				Base:  "dev",
 				Title: "New feature",
 				Body:  "Adds new feature",

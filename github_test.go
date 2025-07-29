@@ -70,11 +70,11 @@ func TestWaitRateLimit(t *testing.T) {
 		},
 		{
 			name:         "Reset == 0, retryWaitMin по умолчанию",
-			retryWaitMin: 0, // default = 5
+			retryWaitMin: 0, // default = 1
 			retryWaitMax: 0, // default = 60
 			rl:           &RateLimit{Reset: 0},
 			attempt:      2,
-			expectedWait: 20 * time.Second, // 5 * 2^2 = 20
+			expectedWait: 4 * time.Second, // 1 * 2^2 = 4
 		},
 	}
 
@@ -88,7 +88,7 @@ func TestWaitRateLimit(t *testing.T) {
 			require.NoError(t, err)
 
 			start := time.Now()
-			client.waitRateLimit(tc.rl, tc.attempt)
+			_ = client.waitRateLimit(t.Context(), tc.rl, tc.attempt)
 			end := time.Now()
 
 			elapsed := end.Sub(start)
@@ -504,7 +504,7 @@ func TestDo(t *testing.T) {
 			ts := tt.setupServer()
 			defer ts.Close()
 
-			client, err := NewClient()
+			client, _ := NewClient()
 			client.baseURL, _ = url.Parse(ts.URL)
 			tt.setupClient(client)
 

@@ -1,7 +1,6 @@
 package github
 
 import (
-	"strings"
 	"time"
 )
 
@@ -14,19 +13,19 @@ type Timestamp struct {
 
 func (t *Timestamp) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
-		return []byte{}, nil
+		return []byte("null"), nil
 	}
 
-	return []byte(t.Format(time.RFC3339)), nil
+	return []byte(`"` + t.Format(time.RFC3339) + `"`), nil
 }
 
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
-	s := strings.Trim(string(data), "\"")
-	if s == "null" {
+	if string(data) == "null" {
 		t.Time = time.Time{}
 		return nil
 	}
 
+	s := string(data[1 : len(data)-1])
 	parsed, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		return err
