@@ -136,9 +136,9 @@ func (c *Client) NewRequest(method, path string, body any) (*http.Request, error
 func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	req = req.WithContext(ctx)
 
-	var resp *http.Response
+	var httpresp *http.Response
 	var err error
-	var response *Response
+	var resp *Response
 
 	maxAtm := max(c.retryMax, 1)
 	for attempt := range maxAtm {
@@ -152,59 +152,62 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			c.requestHook(req)
 		}
 
-		resp, err = c.client.Do(req)
+		httpresp, err = c.client.Do(req)
 		if err != nil {
 			return nil, err
 		}
 
-		response = newResponse(resp)
+		resp, err = newResponse(httpresp)
+		if err != nil {
+			return resp, err
+		}
 
 		if c.responseHook != nil {
-			c.responseHook(response)
+			c.responseHook(resp)
 		}
 
-		if checkRetry(response) {
-			if !c.rateLimitRetry {
-				return response, newAPIError(resp)
-			}
+		if !checkRetry(resp) {
+			break
+		}
 
-			if c.rateLimitHandler != nil {
-				if err := c.rateLimitHandler(resp); err != nil {
-					return response, err
-				}
-				continue
-			}
-			_ = resp.Body.Close()
+		if !c.rateLimitRetry {
+			return resp, newAPIError(httpresp)
+		}
 
-			if attempt >= maxAtm-1 {
-				return response, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
-			}
-
-			waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, attempt, response)
-			select {
-			case <-ctx.Done():
-				return response, ctx.Err()
-			case <-time.After(waitTime):
-				continue
-			default:
+		if c.rateLimitHandler != nil {
+			if err := c.rateLimitHandler(httpresp); err != nil {
+				return resp, err
 			}
 		}
-		break
+		_ = httpresp.Body.Close()
+
+		if attempt >= maxAtm-1 {
+			return resp, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
+		}
+
+		waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, attempt, resp)
+		select {
+		case <-ctx.Done():
+			return resp, ctx.Err()
+		case <-time.After(waitTime):
+			continue
+		default:
+		}
 	}
 
 	if resp.StatusCode >= 400 {
-		return response, newAPIError(resp)
+		return resp, newAPIError(httpresp)
 	}
 
 	if v != nil {
 		if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
-			return response, err
+			return resp, err
 		}
 	}
 
 	_ = resp.Body.Close()
 
-	return response, nil
+	return resp, nil
 }
 
 func checkRetry(resp *Response) bool {
@@ -225,14 +228,15 @@ func checkRetry(resp *Response) bool {
 	return slices.Contains(serviceUnavailable, resp.StatusCode)
 }
 
-func calcBackoff(minT time.Duration, maxT time.Duration, attempt int, resp *Response) time.Duration {
+func calcBackoff(minD time.Duration, maxD time.Duration, attempt int, resp *Response) time.Duration {
 	if resp.Reset != 0 {
 		resetTime := time.Unix(resp.Reset, 0)
 
 		return time.Until(resetTime)
 	}
 
-	wait := time.Duration(float64(minT) * math.Pow(2, float64(attempt)))
+	backoff := float64(minD) * math.Pow(2, float64(attempt))
+	wait := time.Duration(backoff)
 
-	return min(wait, maxT)
+	return min(wait, maxD)
 }

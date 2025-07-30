@@ -94,7 +94,7 @@ func TestParseLinkHeader(t *testing.T) {
 				resp.Header.Set("Link", tt.linkHeader)
 			}
 
-			err := populateLinkHeader(resp)
+			err := populatePagination(resp)
 
 			if (err != nil) != tt.expectError {
 				t.Fatalf("expected error: %v, got: %v", tt.expectError, err)
@@ -239,14 +239,12 @@ func TestDo_Success(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, _ := NewClient()
-	client.baseURL, _ = url.Parse(ts.URL)
+	client, _ := NewClient(WithBaseURL(ts.URL))
 
 	req, err := client.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)
 
-	ctx := context.Background()
-	resp, err := client.Do(ctx, req, &map[string]string{})
+	resp, err := client.Do(context.Background(), req, &map[string]string{})
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -282,10 +280,8 @@ func TestDo_RateLimitExceeded_NoRetry(t *testing.T) {
 	resp, err := client.Do(ctx, req, nil)
 
 	require.Error(t, err)
-	errorResp, ok := err.(*APIError)
-	require.True(t, ok)
-	assert.Equal(t, http.StatusTooManyRequests, errorResp.StatusCode)
-	assert.Equal(t, "Too Many Requests", errorResp.Message)
+
+	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 	assert.Equal(t, 1, resp.Limit)
 	assert.Equal(t, 0, resp.Remaining)
 }

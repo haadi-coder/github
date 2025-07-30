@@ -1,6 +1,7 @@
 package github
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -35,20 +36,21 @@ type Response struct {
 	LastPage int
 }
 
-func newResponse(httpresp *http.Response) *Response {
+func newResponse(httpresp *http.Response) (*Response, error) {
 	resp := &Response{
 		Response:  httpresp,
 		RateLimit: &RateLimit{},
 	}
 
-	populateRateLimit(resp)
-
-	err := populateLinkHeader(resp)
-	if err != nil {
-		return resp
+	if err := populateRateLimit(resp); err != nil {
+		return resp, err
 	}
 
-	return resp
+	if err := populatePagination(resp); err != nil {
+		return resp, err
+	}
+
+	return resp, nil
 }
 
 const (
@@ -58,27 +60,48 @@ const (
 	rateUsedHeader     = "X-RateLimit-Used"
 )
 
-func populateRateLimit(resp *Response) {
-	if rawLimit := resp.Header.Get(rateLimitHeader); rawLimit != "" {
-		if limit, err := strconv.Atoi(rawLimit); err == nil {
-			resp.Limit = limit
+func populateRateLimit(resp *Response) error {
+	rawLimit := resp.Header.Get(rateLimitHeader)
+	if rawLimit != "" {
+		limit, err := strconv.Atoi(rawLimit)
+		if err != nil {
+			return fmt.Errorf("failed to parse rate limit header: %w", err)
 		}
+
+		resp.Limit = limit
 	}
-	if rawRemaining := resp.Header.Get(rateRemainigHeader); rawRemaining != "" {
-		if remaining, err := strconv.Atoi(rawRemaining); err == nil {
-			resp.Remaining = remaining
+
+	rawRemaining := resp.Header.Get(rateRemainigHeader)
+	if rawRemaining != "" {
+		remaining, err := strconv.Atoi(rawRemaining)
+		if err != nil {
+			return fmt.Errorf("failed to parse rate remaining header: %w", err)
 		}
+
+		resp.Remaining = remaining
 	}
-	if rawReset := resp.Header.Get(rateResetHeader); rawReset != "" {
-		if reset, err := strconv.ParseInt(rawReset, 10, 64); err == nil {
-			resp.Reset = reset
+
+	rawReset := resp.Header.Get(rateResetHeader)
+	if rawReset != "" {
+		reset, err := strconv.ParseInt(rawReset, 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse rate reset header: %w", err)
 		}
+
+		resp.Reset = reset
 	}
-	if rawUsed := resp.Header.Get(rateUsedHeader); rawUsed != "" {
-		if used, err := strconv.Atoi(rawUsed); err == nil {
-			resp.Used = used
+
+	rawUsed := resp.Header.Get(rateUsedHeader)
+	if rawUsed != "" {
+		used, err := strconv.Atoi(rawUsed)
+		if err != nil {
+			return fmt.Errorf("failed to parse rate used header: %w", err)
 		}
+
+		resp.Used = used
 	}
+
+	return nil
 }
 
 const (
@@ -88,40 +111,38 @@ const (
 	linkLast  = "last"
 )
 
-func populateLinkHeader(resp *Response) error {
+func populatePagination(resp *Response) error {
 	header := resp.Header.Get("Link")
 	if header == "" {
 		return nil
 	}
 
 	links := linkheader.Parse(header)
-	for _, link := range links {
 
+	for _, link := range links {
 		url, err := url.Parse(link.URL)
 		if err != nil {
 			return err
 		}
 
-		pageCount, err := strconv.Atoi(url.Query().Get("page"))
+		page, err := strconv.Atoi(url.Query().Get("page"))
 		if err != nil {
 			return err
 		}
 
-		if pageCount == 0 {
+		if page == 0 {
 			continue
 		}
 
 		switch link.Rel {
 		case linkPrev:
-			resp.PreviousPage = pageCount
+			resp.PreviousPage = page
 		case linkNext:
-			resp.NextPage = pageCount
+			resp.NextPage = page
 		case linkFirst:
-			resp.FirstPage = pageCount
+			resp.FirstPage = page
 		case linkLast:
-			resp.LastPage = pageCount
-		default:
-			continue
+			resp.LastPage = page
 		}
 	}
 
