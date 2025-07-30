@@ -141,7 +141,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	var response *Response
 
 	maxAtm := max(c.retryMax, 1)
-	for atm := range maxAtm {
+	for attempt := range maxAtm {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -157,7 +157,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			return nil, err
 		}
 
-		response = buildResponse(resp)
+		response = newResponse(resp)
 
 		if c.responseHook != nil {
 			c.responseHook(response)
@@ -176,11 +176,11 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			}
 			_ = resp.Body.Close()
 
-			if atm >= maxAtm-1 {
+			if attempt >= maxAtm-1 {
 				return response, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
 			}
 
-			waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, atm, response)
+			waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, attempt, response)
 			select {
 			case <-ctx.Done():
 				return response, ctx.Err()
@@ -221,7 +221,7 @@ func checkRetry(resp *Response) bool {
 		http.StatusBadGateway,
 		http.StatusServiceUnavailable,
 	}
-	
+
 	return slices.Contains(serviceUnavailable, resp.StatusCode)
 }
 

@@ -85,7 +85,7 @@ func TestBuildResponseRateLimit(t *testing.T) {
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
-			response := buildResponse(resp)
+			response := newResponse(resp)
 			assert.Equal(t, tt.expectedRateLimit, response.RateLimit)
 		})
 	}

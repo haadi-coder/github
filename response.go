@@ -35,6 +35,22 @@ type Response struct {
 	LastPage int
 }
 
+func newResponse(httpresp *http.Response) *Response {
+	resp := &Response{
+		Response:  httpresp,
+		RateLimit: &RateLimit{},
+	}
+
+	populateRateLimit(resp)
+
+	err := populateLinkHeader(resp)
+	if err != nil {
+		return resp
+	}
+
+	return resp
+}
+
 const (
 	rateLimitHeader    = "X-RateLimit-Limit"
 	rateRemainigHeader = "X-RateLimit-Remaining"
@@ -42,39 +58,27 @@ const (
 	rateUsedHeader     = "X-RateLimit-Used"
 )
 
-func buildResponse(httpresp *http.Response) *Response {
-	resp := &Response{
-		Response:  httpresp,
-		RateLimit: &RateLimit{},
-	}
-
-	if lim := resp.Header.Get(rateLimitHeader); lim != "" {
-		if intL, err := strconv.Atoi(lim); err == nil {
-			resp.Limit = intL
+func populateRateLimit(resp *Response) {
+	if rawLimit := resp.Header.Get(rateLimitHeader); rawLimit != "" {
+		if limit, err := strconv.Atoi(rawLimit); err == nil {
+			resp.Limit = limit
 		}
 	}
-	if rem := resp.Header.Get(rateRemainigHeader); rem != "" {
-		if intRm, err := strconv.Atoi(rem); err == nil {
-			resp.Remaining = intRm
+	if rawRemaining := resp.Header.Get(rateRemainigHeader); rawRemaining != "" {
+		if remaining, err := strconv.Atoi(rawRemaining); err == nil {
+			resp.Remaining = remaining
 		}
 	}
-	if res := resp.Header.Get(rateResetHeader); res != "" {
-		if intRes, err := strconv.ParseInt(res, 10, 64); err == nil {
-			resp.Reset = intRes
+	if rawReset := resp.Header.Get(rateResetHeader); rawReset != "" {
+		if reset, err := strconv.ParseInt(rawReset, 10, 64); err == nil {
+			resp.Reset = reset
 		}
 	}
-	if used := resp.Header.Get(rateUsedHeader); used != "" {
-		if intUsed, err := strconv.Atoi(used); err == nil {
-			resp.Used = intUsed
+	if rawUsed := resp.Header.Get(rateUsedHeader); rawUsed != "" {
+		if used, err := strconv.Atoi(rawUsed); err == nil {
+			resp.Used = used
 		}
 	}
-
-	err := parseLinkHeader(resp)
-	if err != nil {
-		return resp
-	}
-
-	return resp
 }
 
 const (
@@ -84,7 +88,7 @@ const (
 	linkLast  = "last"
 )
 
-func parseLinkHeader(resp *Response) error {
+func populateLinkHeader(resp *Response) error {
 	header := resp.Header.Get("Link")
 	if header == "" {
 		return nil

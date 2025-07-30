@@ -94,7 +94,7 @@ func TestParseLinkHeader(t *testing.T) {
 				resp.Header.Set("Link", tt.linkHeader)
 			}
 
-			err := parseLinkHeader(resp)
+			err := populateLinkHeader(resp)
 
 			if (err != nil) != tt.expectError {
 				t.Fatalf("expected error: %v, got: %v", tt.expectError, err)
