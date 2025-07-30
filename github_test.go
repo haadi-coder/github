@@ -74,7 +74,7 @@ func TestParseLinkHeader(t *testing.T) {
 		{
 			name:        "empty link header",
 			linkHeader:  "",
-			expectError: true,
+			expectError: false,
 		},
 		{
 			name:        "malformed URL",
@@ -362,17 +362,15 @@ func TestDo_RetryOnRateLimit(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, _ := NewClient()
-	client.baseURL, _ = url.Parse(ts.URL)
-	client.rateLimitRetry = true
-	client.retryMax = 10
+	client, _ := NewClient(WithBaseURL(ts.URL), WithRateLimitRetry(true), WithRetryMax(3))
 
 	req, err := client.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)
 
 	resp, err := client.Do(context.Background(), req, nil)
 
-	require.NoError(t, err)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "max retry attempts")
 	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 }
 
@@ -383,8 +381,7 @@ func TestDo_InvalidJSON(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	client, _ := NewClient()
-	client.baseURL, _ = url.Parse(ts.URL)
+	client, _ := NewClient(WithBaseURL(ts.URL))
 
 	req, err := client.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)

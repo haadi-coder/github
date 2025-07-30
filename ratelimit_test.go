@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetRateLimit(t *testing.T) {
+func TestBuildResponseRateLimit(t *testing.T) {
 	tests := []struct {
 		name              string
 		headers           map[string]string
@@ -85,8 +85,8 @@ func TestGetRateLimit(t *testing.T) {
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
-			rl := getRateLimit(resp)
-			assert.Equal(t, tt.expectedRateLimit, rl)
+			response := buildResponse(resp)
+			assert.Equal(t, tt.expectedRateLimit, response.RateLimit)
 		})
 	}
 }
@@ -125,7 +125,7 @@ func TestRateLimitService_Get(t *testing.T) {
 	assert.Equal(t, expectedResult, result)
 }
 
-func TestCalculateBackoff(t *testing.T) {
+func TestCalcBackoff(t *testing.T) {
 	tests := []struct {
 		name     string
 		attempt  int
@@ -163,7 +163,7 @@ func TestCalculateBackoff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := calculateBackoff(tt.attempt, tt.waitMin, tt.waitMax, tt.reset)
+			result := calcBackoff(tt.waitMin, tt.waitMax, tt.attempt, &Response{RateLimit: &RateLimit{Reset: tt.reset}})
 			assert.InDelta(t, tt.expected, result, 0.5)
 		})
 	}

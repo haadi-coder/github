@@ -1,7 +1,6 @@
 package github
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -36,10 +35,38 @@ type Response struct {
 	LastPage int
 }
 
-func buildResponse(hr *http.Response, rl *RateLimit) *Response {
+const (
+	rateLimitHeader    = "X-RateLimit-Limit"
+	rateRemainigHeader = "X-RateLimit-Remaining"
+	rateResetHeader    = "X-RateLimit-Reset"
+	rateUsedHeader     = "X-RateLimit-Used"
+)
+
+func buildResponse(httpresp *http.Response) *Response {
 	resp := &Response{
-		Response:  hr,
-		RateLimit: rl,
+		Response:  httpresp,
+		RateLimit: &RateLimit{},
+	}
+
+	if lim := resp.Header.Get(rateLimitHeader); lim != "" {
+		if intL, err := strconv.Atoi(lim); err == nil {
+			resp.Limit = intL
+		}
+	}
+	if rem := resp.Header.Get(rateRemainigHeader); rem != "" {
+		if intRm, err := strconv.Atoi(rem); err == nil {
+			resp.Remaining = intRm
+		}
+	}
+	if res := resp.Header.Get(rateResetHeader); res != "" {
+		if intRes, err := strconv.ParseInt(res, 10, 64); err == nil {
+			resp.Reset = intRes
+		}
+	}
+	if used := resp.Header.Get(rateUsedHeader); used != "" {
+		if intUsed, err := strconv.Atoi(used); err == nil {
+			resp.Used = intUsed
+		}
 	}
 
 	err := parseLinkHeader(resp)
@@ -60,12 +87,11 @@ const (
 func parseLinkHeader(resp *Response) error {
 	header := resp.Header.Get("Link")
 	if header == "" {
-		return errors.New("invalid Link Header")
+		return nil
 	}
 
 	links := linkheader.Parse(header)
 	for _, link := range links {
-		rel := link.Rel
 
 		url, err := url.Parse(link.URL)
 		if err != nil {
@@ -81,7 +107,7 @@ func parseLinkHeader(resp *Response) error {
 			continue
 		}
 
-		switch rel {
+		switch link.Rel {
 		case linkPrev:
 			resp.PreviousPage = pageCount
 		case linkNext:

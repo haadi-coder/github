@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
+	"slices"
 	"time"
 )
 
@@ -136,7 +138,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 	var resp *http.Response
 	var err error
-	var rateLim *RateLimit
 	var response *Response
 
 	maxAtm := max(c.retryMax, 1)
@@ -156,8 +157,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			return nil, err
 		}
 
-		rateLim = getRateLimit(resp)
-		response = buildResponse(resp, rateLim)
+		response = buildResponse(resp)
 
 		if c.responseHook != nil {
 			c.responseHook(response)
@@ -180,14 +180,13 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 				return response, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
 			}
 
-			waitTime := calculateBackoff(atm, c.retryWaitMin, c.retryWaitMax, rateLim.Reset)
+			waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, atm, response)
 			select {
 			case <-ctx.Done():
 				return response, ctx.Err()
 			case <-time.After(waitTime):
-				return response, nil
-			default:
 				continue
+			default:
 			}
 		}
 		break
@@ -208,14 +207,32 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	return response, nil
 }
 
-func checkRetry(res *Response) bool {
-	if (res.StatusCode == http.StatusForbidden || res.StatusCode == http.StatusTooManyRequests) && res.Remaining == 0 {
+func checkRetry(resp *Response) bool {
+	serviceShutted := []int{
+		http.StatusForbidden,
+		http.StatusTooManyRequests,
+	}
+	if slices.Contains(serviceShutted, resp.StatusCode) && resp.Remaining == 0 {
 		return true
 	}
 
-	if res.StatusCode == http.StatusInternalServerError || res.StatusCode == http.StatusBadGateway || res.StatusCode == http.StatusServiceUnavailable {
-		return true
+	serviceUnavailable := []int{
+		http.StatusInternalServerError,
+		http.StatusBadGateway,
+		http.StatusServiceUnavailable,
+	}
+	
+	return slices.Contains(serviceUnavailable, resp.StatusCode)
+}
+
+func calcBackoff(minT time.Duration, maxT time.Duration, attempt int, resp *Response) time.Duration {
+	if resp.Reset != 0 {
+		resetTime := time.Unix(resp.Reset, 0)
+
+		return time.Until(resetTime)
 	}
 
-	return false
+	wait := time.Duration(float64(minT) * math.Pow(2, float64(attempt)))
+
+	return min(wait, maxT)
 }
