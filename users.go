@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // UsersService provides access to user-related API methods.
@@ -48,6 +49,7 @@ func (s *UsersService) Get(ctx context.Context, username string) (*User, *Respon
 	}
 
 	user := new(User)
+	
 	resp, err := s.client.Do(ctx, req, user)
 	if err != nil {
 		return nil, resp, err
@@ -69,6 +71,7 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, *Response, 
 	}
 
 	user := new(User)
+
 	resp, err := s.client.Do(ctx, req, user)
 	if err != nil {
 		return nil, resp, err
@@ -80,8 +83,9 @@ func (s *UsersService) GetAuthenticated(ctx context.Context) (*User, *Response, 
 // UsersListOptions specifies the optional parameters to list users.
 // GitHub API docs: https://docs.github.com/en/rest/users/users#list-users
 type UsersListOptions struct {
-	Since int
 	*ListOptions
+
+	Since int
 }
 
 // List retrieves a list of GitHub users.
@@ -93,11 +97,13 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 
 	if opts != nil {
 		v := url.Values{}
+
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Since != 0 {
-			v.Set("since", fmt.Sprintf("%d", opts.Since))
+			v.Set("since", strconv.Itoa(opts.Since))
 		}
 
 		if len(v) != 0 {
@@ -111,6 +117,7 @@ func (s *UsersService) List(ctx context.Context, opts *UsersListOptions) ([]*Use
 	}
 
 	users := new([]*User)
+
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err
@@ -146,6 +153,7 @@ func (s *UsersService) UpdateAuthenticated(ctx context.Context, body UserUpdateR
 	}
 
 	user := new(User)
+
 	resp, err := s.client.Do(ctx, req, user)
 	if err != nil {
 		return nil, resp, err
@@ -175,6 +183,7 @@ func (s *UsersService) ListAuthenticatedUserFollowers(ctx context.Context, opts 
 	}
 
 	users := new([]*User)
+
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err
@@ -204,6 +213,7 @@ func (s *UsersService) ListAuthenticatedUserFollowings(ctx context.Context, opts
 	}
 
 	users := new([]*User)
+
 	res, err := s.client.Do(ctx, req, users)
 	if err != nil {
 		return nil, res, err

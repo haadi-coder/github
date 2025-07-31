@@ -46,6 +46,7 @@ func TestUsersService_Get(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+			
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -99,6 +100,8 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
@@ -165,6 +168,8 @@ func TestUsersService_List(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
@@ -182,6 +187,7 @@ func TestUsersService_List(t *testing.T) {
 			userList, resp, err := client.User.List(context.Background(), tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
+
 			if len(tt.expected) > 0 {
 				assert.Len(t, userList, len(tt.expected))
 				assert.Equal(t, tt.expected, userList)
@@ -231,10 +237,13 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+
 				if tt.token != "" {
 					assert.Equal(t, "Bearer "+tt.token, r.Header.Get("Authorization"))
 				}
@@ -252,6 +261,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 			require.NoError(t, err)
 
 			var body UserUpdateRequest
+
 			_ = json.Unmarshal([]byte(tt.requestBody), &body)
 
 			user, resp, err := client.User.UpdateAuthenticated(context.Background(), body)
@@ -307,10 +317,13 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
 				assert.Equal(t, tt.expectedQuery, r.URL.RawQuery)
+
 				if tt.token != "" {
 					assert.Equal(t, "Bearer "+tt.token, r.Header.Get("Authorization"))
 				}
@@ -374,6 +387,8 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
@@ -382,6 +397,7 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 				}
 
 				w.WriteHeader(tt.responseStatus)
+
 				if tt.responseStatus != http.StatusNoContent {
 					w.Header().Set("Content-Type", "application/json")
 					_, _ = w.Write([]byte(`{"message":"Unauthorized"}`))
@@ -400,7 +416,6 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 
 			if tt.responseStatus == http.StatusNoContent {
 				require.NoError(t, err)
-
 			} else {
 				require.Error(t, err)
 			}

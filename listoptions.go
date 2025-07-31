@@ -17,10 +17,14 @@ type ListOptions struct {
 	PerPage int
 }
 
+// Apply adds the pagination parameters from ListOptions to the provided URL values.
+// This method is typically used to modify query parameters for API requests
+// that support pagination.
 func (lo *ListOptions) Apply(v url.Values) {
 	if lo.Page != 0 {
 		v.Set("page", strconv.Itoa(lo.Page))
 	}
+	
 	if lo.PerPage != 0 {
 		v.Set("per_page", strconv.Itoa(lo.PerPage))
 	}

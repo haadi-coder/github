@@ -41,6 +41,7 @@ func TestSearch_Repositories(t *testing.T) {
 				IncompleteResults: false,
 				Items:             []*Repository{{ID: 1, Name: "go-lang"}},
 			},
+			expectError: false,
 		},
 		{
 			name:        "Empty search",
@@ -57,6 +58,7 @@ func TestSearch_Repositories(t *testing.T) {
 				IncompleteResults: false,
 				Items:             []*Repository{},
 			},
+			expectError: false,
 		},
 		{
 			name:        "Server error",
@@ -78,13 +80,16 @@ func TestSearch_Repositories(t *testing.T) {
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
+				
 				if tt.expectError {
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
 					w.WriteHeader(http.StatusOK)
 				}
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -95,14 +100,15 @@ func TestSearch_Repositories(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, result)
 
 			assert.Equal(t, tt.expected.TotalCount, result.TotalCount)
 			assert.Equal(t, tt.expected.IncompleteResults, result.IncompleteResults)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
-
 			assert.Len(t, result.Items, len(tt.expected.Items))
+
 			if len(tt.expected.Items) > 0 {
 				assert.Equal(t, tt.expected.Items, result.Items)
 			}
@@ -167,17 +173,21 @@ func TestSearch_Users(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		t.Parallel()
+		
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
+
 				if tt.expectError {
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
 					w.WriteHeader(http.StatusOK)
 				}
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 			defer ts.Close()
@@ -190,6 +200,7 @@ func TestSearch_Users(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, result)
 

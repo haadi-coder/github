@@ -33,6 +33,8 @@ func TestParseLinkHeader(t *testing.T) {
 			expectedNext:  2,
 			expectedFirst: 1,
 			expectedLast:  5,
+			expectedPrev:  0,
+			expectError:   false,
 		},
 		{
 			name: "last page (GitHub example)",
@@ -42,6 +44,8 @@ func TestParseLinkHeader(t *testing.T) {
 			expectedPrev:  4,
 			expectedFirst: 1,
 			expectedLast:  5,
+			expectedNext:  0,
+			expectError:   false,
 		},
 		{
 			name: "middle page (GitHub example)",
@@ -53,6 +57,7 @@ func TestParseLinkHeader(t *testing.T) {
 			expectedPrev:  1,
 			expectedFirst: 1,
 			expectedLast:  5,
+			expectError:   false,
 		},
 		{
 			name: "single page (no pagination)",
@@ -60,31 +65,51 @@ func TestParseLinkHeader(t *testing.T) {
 				`<https://api.github.com/repositories/123/issues?page=1&per_page=30>; rel="last"`,
 			expectedFirst: 1,
 			expectedLast:  1,
+			expectedPrev:  0,
+			expectedNext:  0,
+			expectError:   false,
 		},
 		{
-			name:        "invalid page number",
-			linkHeader:  `<https://api.github.com/repositories/123/issues?page=invalid>; rel="next"`,
-			expectError: true,
+			name:          "invalid page number",
+			linkHeader:    `<https://api.github.com/repositories/123/issues?page=invalid>; rel="next"`,
+			expectError:   true,
+			expectedPrev:  0,
+			expectedFirst: 0,
+			expectedLast:  0,
+			expectedNext:  0,
 		},
 		{
-			name:         "page zero should be skipped",
-			linkHeader:   `<https://api.github.com/repositories/123/issues?page=0>; rel="next"`,
-			expectedNext: 0,
+			name:          "page zero should be skipped",
+			linkHeader:    `<https://api.github.com/repositories/123/issues?page=0>; rel="next"`,
+			expectedNext:  0,
+			expectedPrev:  0,
+			expectedFirst: 0,
+			expectedLast:  0,
+			expectError:   false,
 		},
 		{
-			name:        "empty link header",
-			linkHeader:  "",
-			expectError: false,
+			name:          "empty link header",
+			linkHeader:    "",
+			expectError:   false,
+			expectedPrev:  0,
+			expectedFirst: 0,
+			expectedLast:  0,
+			expectedNext:  0,
 		},
 		{
-			name:        "malformed URL",
-			linkHeader:  `<invalid-url>; rel="next"`,
-			expectError: true,
+			name:          "malformed URL",
+			linkHeader:    `<invalid-url>; rel="next"`,
+			expectError:   true,
+			expectedPrev:  0,
+			expectedFirst: 0,
+			expectedLast:  0,
+			expectedNext:  0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			resp := &Response{
 				Response: &http.Response{
 					Header: make(http.Header),
@@ -95,16 +120,15 @@ func TestParseLinkHeader(t *testing.T) {
 			}
 
 			err := populatePagination(resp)
-
 			if (err != nil) != tt.expectError {
 				t.Fatalf("expected error: %v, got: %v", tt.expectError, err)
 			}
 
 			if !tt.expectError {
-				assert.Equal(t, resp.PreviousPage, tt.expectedPrev)
-				assert.Equal(t, resp.NextPage, tt.expectedNext)
-				assert.Equal(t, resp.FirstPage, tt.expectedFirst)
-				assert.Equal(t, resp.LastPage, tt.expectedLast)
+				assert.Equal(t, tt.expectedPrev, resp.PreviousPage)
+				assert.Equal(t, tt.expectedNext, resp.NextPage)
+				assert.Equal(t, tt.expectedFirst, resp.FirstPage)
+				assert.Equal(t, tt.expectedLast, resp.LastPage)
 			}
 		})
 	}
@@ -150,6 +174,7 @@ func TestBuildErrorResponse(t *testing.T) {
             }`,
 			expectedMsg:      "Validation failed",
 			expectedDocURL:   "https://example.com/validation ",
+			expectedErrors:   []APIErrorDetail{},
 			expectedErrIsNil: false,
 		},
 		{
@@ -160,6 +185,8 @@ func TestBuildErrorResponse(t *testing.T) {
             }`,
 			expectedMsg:      "Not found",
 			expectedErrIsNil: false,
+			expectedDocURL:   "",
+			expectedErrors:   []APIErrorDetail{},
 		},
 		{
 			name:             "Invalid JSON",
@@ -167,6 +194,8 @@ func TestBuildErrorResponse(t *testing.T) {
 			body:             `invalid-json`,
 			expectedMsg:      "request failed with status 400",
 			expectedErrIsNil: false,
+			expectedDocURL:   "",
+			expectedErrors:   []APIErrorDetail{},
 		},
 		{
 			name:             "Empty body",
@@ -174,6 +203,8 @@ func TestBuildErrorResponse(t *testing.T) {
 			body:             "",
 			expectedMsg:      "request failed with status 500",
 			expectedErrIsNil: false,
+			expectedDocURL:   "",
+			expectedErrors:   []APIErrorDetail{},
 		},
 		{
 			name:             "Non-JSON body",
@@ -181,6 +212,8 @@ func TestBuildErrorResponse(t *testing.T) {
 			body:             "Not Found",
 			expectedMsg:      "request failed with status 404",
 			expectedErrIsNil: false,
+			expectedDocURL:   "",
+			expectedErrors:   []APIErrorDetail{},
 		},
 		{
 			name:       "JSON with empty errors array",
@@ -192,12 +225,16 @@ func TestBuildErrorResponse(t *testing.T) {
 			expectedMsg:      "Conflict detected",
 			expectedErrors:   []APIErrorDetail{},
 			expectedErrIsNil: false,
+			expectedDocURL:   "",
 		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var resp *http.Response
+
 			if tt.statusCode != 0 || tt.body != "" {
 				body := io.NopCloser(bytes.NewBufferString(tt.body))
 				resp = &http.Response{
@@ -215,13 +252,13 @@ func TestBuildErrorResponse(t *testing.T) {
 				assert.Equal(t, tt.expectedDocURL, e.DocumentationURL)
 
 				if len(tt.expectedErrors) > 0 {
-					assert.Equal(t, len(tt.expectedErrors), len(e.Errors))
+					assert.Len(t, tt.expectedErrors, len(e.Errors))
 					assert.Equal(t, tt.expectedErrors, e.Errors)
 				} else {
 					assert.Empty(t, e.Errors)
 				}
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

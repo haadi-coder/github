@@ -37,6 +37,8 @@ func TestTimestamp_MarshalJSON(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, err := tc.timestamp.MarshalJSON()
 
 			if tc.expectError {
@@ -95,7 +97,9 @@ func TestTimestamp_UnmarshalJSON(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			var ts Timestamp
+
 			err := ts.UnmarshalJSON([]byte(tc.jsonData))
 
 			if tc.expectError {

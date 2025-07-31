@@ -78,6 +78,7 @@ func TestIssuesService_Get(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -134,13 +135,16 @@ func TestIssuesService_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody IssueCreateRequest
+
+				body, _ := io.ReadAll(r.Body)
+
 				_ = json.Unmarshal(body, &reqBody)
 				assert.Equal(t, *tt.body, reqBody)
 
@@ -148,6 +152,7 @@ func TestIssuesService_Create(t *testing.T) {
 				w.WriteHeader(http.StatusCreated)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -204,20 +209,24 @@ func TestIssuesService_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody IssueUpdateRequest
+
+				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
+
 				assert.Equal(t, *tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -268,24 +277,30 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
+				
 				if tt.isLock {
 					assert.Equal(t, "PUT", r.Method)
 				} else {
 					assert.Equal(t, "DELETE", r.Method)
 				}
+
 				assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
 				if tt.isLock {
-					body, _ := io.ReadAll(r.Body)
 					var reqBody IssueLockRequest
+
+					body, _ := io.ReadAll(r.Body)
 					_ = json.Unmarshal(body, &reqBody)
+
 					assert.Equal(t, *tt.body, reqBody)
 				}
 
 				w.WriteHeader(tt.responseStatus)
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -296,6 +311,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 			} else {
 				_, err = client.Issues.Unlock(context.Background(), tt.owner, tt.repoName, tt.issueNum)
 			}
+
 			require.NoError(t, err)
 		})
 	}
@@ -334,14 +350,17 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -392,20 +411,25 @@ func TestIssuesService_CreateComment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody IssueCommentRequest
+
+				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
+
 				assert.Equal(t, tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -449,6 +473,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				url, _ := url.QueryUnescape(r.URL.String())
 				assert.Equal(t, tt.expectedURL, url)
@@ -458,6 +483,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))

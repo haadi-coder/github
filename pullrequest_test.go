@@ -63,6 +63,7 @@ func TestPullRequestsService_Get(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -128,9 +129,11 @@ func TestPullRequestsService_Create(t *testing.T) {
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody PullRequestCreateRequest
+
+				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
+
 				assert.Equal(t, *tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -202,9 +205,11 @@ func TestPullRequestsService_Update(t *testing.T) {
 				assert.Equal(t, "PATCH", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody PullRequestUpdateRequest
+
+				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
+				
 				assert.Equal(t, *tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")
@@ -270,9 +275,11 @@ func TestPullRequestsService_Merge(t *testing.T) {
 				assert.Equal(t, "PUT", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				body, _ := io.ReadAll(r.Body)
 				var reqBody MergeRequest
+
+				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
+
 				assert.Equal(t, *tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")

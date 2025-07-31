@@ -32,7 +32,7 @@ type PullRequest struct {
 	RequestedReviewers []*User     `json:"requested_reviewers"`
 	Repository         *Repository `json:"repository"`
 	User               *User       `json:"user"`
-	HtmlURL            string      `json:"html_url"`
+	HTMLURL            string      `json:"html_url"`
 	DiffURL            string      `json:"diff_url"`
 	PatchURL           string      `json:"patch_url"`
 	IssueURL           string      `json:"issue_url"`
@@ -45,7 +45,11 @@ type PullRequest struct {
 // This method retrieves detailed information about a specific pull request,
 // including its title, description, status, participants, and related metadata.
 // The pull request number is the unique identifier within the repository.
-func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string, pull int) (*PullRequest, *Response, error) {
+func (s *PullRequestsService) Get(
+	ctx context.Context,
+	owner string, repo string,
+	pull int,
+) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
@@ -54,6 +58,7 @@ func (s *PullRequestsService) Get(ctx context.Context, owner string, repo string
 	}
 
 	pr := new(PullRequest)
+	
 	resp, err := s.client.Do(ctx, req, pr)
 	if err != nil {
 		return nil, resp, err
@@ -80,7 +85,12 @@ type PullRequestCreateRequest struct {
 // branch (head) and target branch (base). You can also provide a title, description,
 // and other optional parameters. The created pull request will be owned by the
 // specified repository owner and repository name.
-func (s *PullRequestsService) Create(ctx context.Context, owner string, repo string, body *PullRequestCreateRequest) (*PullRequest, *Response, error) {
+func (s *PullRequestsService) Create(
+	ctx context.Context,
+	owner string,
+	repo string,
+	body *PullRequestCreateRequest,
+) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls", owner, repo)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -89,6 +99,7 @@ func (s *PullRequestsService) Create(ctx context.Context, owner string, repo str
 	}
 
 	pr := new(PullRequest)
+
 	resp, err := s.client.Do(ctx, req, pr)
 	if err != nil {
 		return nil, resp, err
@@ -111,7 +122,13 @@ type PullRequestUpdateRequest struct {
 // This method allows you to modify an existing pull request by its number.
 // You can update the title, description, target branch, state, and other
 // properties of the pull request. Only provided fields will be updated.
-func (s *PullRequestsService) Update(ctx context.Context, owner string, repo string, pull int, body *PullRequestUpdateRequest) (*PullRequest, *Response, error) {
+func (s *PullRequestsService) Update(
+	ctx context.Context,
+	owner string,
+	repo string,
+	pull int,
+	body *PullRequestUpdateRequest,
+) (*PullRequest, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
@@ -120,6 +137,7 @@ func (s *PullRequestsService) Update(ctx context.Context, owner string, repo str
 	}
 
 	pr := new(PullRequest)
+
 	resp, err := s.client.Do(ctx, req, pr)
 	if err != nil {
 		return nil, resp, err
@@ -150,7 +168,13 @@ type Merge struct {
 // You can specify the merge method (merge, squash, or rebase), commit title,
 // commit message, and the specific SHA to merge. The method returns information
 // about the merge operation including the resulting commit SHA.
-func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo string, pull int, body *MergeRequest) (*Merge, *Response, error) {
+func (s *PullRequestsService) Merge(
+	ctx context.Context,
+	owner string,
+	repo string,
+	pull int,
+	body *MergeRequest,
+) (*Merge, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/pulls/%d/merge", owner, repo, pull)
 
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
@@ -159,6 +183,7 @@ func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo stri
 	}
 
 	merge := new(Merge)
+
 	resp, err := s.client.Do(ctx, req, merge)
 	if err != nil {
 		return nil, resp, err
@@ -171,6 +196,7 @@ func (s *PullRequestsService) Merge(ctx context.Context, owner string, repo stri
 // GitHub API docs: https://docs.github.com/en/rest/pulls/pulls#list-pull-requests
 type PullRequestListOptions struct {
 	*ListOptions
+
 	State     *string
 	Head      *string
 	Base      *string
@@ -191,18 +217,23 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Base != nil {
 			v.Set("base", *opts.Base)
 		}
+
 		if opts.Direction != nil {
 			v.Set("direction", *opts.Direction)
 		}
+
 		if opts.Head != nil {
 			v.Set("head", *opts.Head)
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
+
 		if opts.State != nil {
 			v.Set("state", *opts.State)
 		}
@@ -218,6 +249,7 @@ func (s *PullRequestsService) List(ctx context.Context, owner string, repo strin
 	}
 
 	prs := new([]*PullRequest)
+
 	res, err := s.client.Do(ctx, req, prs)
 	if err != nil {
 		return nil, res, err

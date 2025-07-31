@@ -77,15 +77,18 @@ func TestBuildResponseRateLimit(t *testing.T) {
 				for k, v := range tt.headers {
 					w.Header().Set(k, v)
 				}
+
 				w.WriteHeader(http.StatusOK)
 			}))
+
 			defer ts.Close()
 
 			resp, err := http.Get(ts.URL)
 			require.NoError(t, err)
-			defer resp.Body.Close()
 
 			response, _ := newResponse(resp)
+			_ = resp.Body.Close()
+			
 			assert.Equal(t, tt.expectedRateLimit, response.RateLimit)
 		})
 	}
@@ -163,6 +166,7 @@ func TestCalcBackoff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := calcBackoff(tt.waitMin, tt.waitMax, tt.attempt, &Response{RateLimit: &RateLimit{Reset: tt.reset}})
 			assert.InDelta(t, tt.expected, result, 0.5)
 		})

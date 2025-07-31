@@ -107,6 +107,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+			
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -117,6 +118,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
@@ -171,20 +173,24 @@ func TestRepositoriesService_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/user/repos", r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
-				reqBody, _ := io.ReadAll(r.Body)
 				var request RepositoryCreateRequest
+
+				reqBody, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(reqBody, &request)
+
 				assert.Equal(t, tt.body, request)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -195,6 +201,7 @@ func TestRepositoriesService_Create(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
@@ -251,21 +258,25 @@ func TestRepositoriesService_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 				assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
-				reqBody, _ := io.ReadAll(r.Body)
 				var request RepositoryUpdateRequest
+
+				reqBody, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(reqBody, &request)
+
 				assert.Equal(t, tt.body, request)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -276,6 +287,7 @@ func TestRepositoriesService_Update(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.NotNil(t, repo)
 
@@ -311,17 +323,20 @@ func TestRepositoriesService_Delete(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "DELETE", r.Method)
 				assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 
 				w.WriteHeader(tt.responseStatus)
+
 				if tt.responseStatus != http.StatusNoContent {
 					w.Header().Set("Content-Type", "application/json")
 					_, _ = w.Write([]byte(`{"message":"Not Found"}`))
 				}
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -332,6 +347,7 @@ func TestRepositoriesService_Delete(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			assert.Equal(t, tt.responseStatus, resp.StatusCode)
 			require.NoError(t, err)
 		})
@@ -383,6 +399,7 @@ func TestRepositoriesService_List(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -392,6 +409,7 @@ func TestRepositoriesService_List(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -402,6 +420,7 @@ func TestRepositoriesService_List(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			assert.Len(t, repos, len(tt.expectedResult))
 			assert.Equal(t, tt.expectedResult, repos)
@@ -457,6 +476,7 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -466,6 +486,7 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -476,6 +497,7 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			assert.Len(t, users, len(tt.expectedResult))
 			assert.Equal(t, tt.expectedResult, users)

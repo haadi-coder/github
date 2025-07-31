@@ -20,7 +20,7 @@ type Repository struct {
 	Fullname        string     `json:"full_name"`
 	Owner           *User      `json:"owner"`
 	Private         bool       `json:"private"`
-	HtmlURL         string     `json:"html_url"`
+	HTMLURL         string     `json:"html_url"`
 	Description     string     `json:"description"`
 	Fork            bool       `json:"fork"`
 	URL             string     `json:"url"`
@@ -58,12 +58,14 @@ type Repository struct {
 // including its metadata, statistics, and permissions for the authenticated user.
 func (s *RepositoriesService) Get(ctx context.Context, owner string, repo string) (*Repository, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+
 	req, err := s.client.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	r := new(Repository)
+
 	resp, err := s.client.Do(ctx, req, r)
 	if err != nil {
 		return nil, resp, err
@@ -104,14 +106,21 @@ type RepositoryUpdateRequest struct {
 // This method allows you to update various settings and metadata of a repository
 // such as its name, description, visibility, merge settings, and other configuration
 // options. Only the provided fields will be updated.
-func (s *RepositoriesService) Update(ctx context.Context, owner string, repo string, body RepositoryUpdateRequest) (*Repository, *Response, error) {
+func (s *RepositoriesService) Update(
+	ctx context.Context,
+	owner string,
+	repo string,
+	body RepositoryUpdateRequest,
+) (*Repository, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	r := new(Repository)
+
 	resp, err := s.client.Do(ctx, req, r)
 	if err != nil {
 		return nil, resp, err
@@ -126,6 +135,7 @@ func (s *RepositoriesService) Update(ctx context.Context, owner string, repo str
 // Note that this requires admin permissions on the repository.
 func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
+	
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
@@ -181,6 +191,7 @@ func (s *RepositoriesService) Create(ctx context.Context, body RepositoryCreateR
 	}
 
 	repo := new(Repository)
+
 	resp, err := s.client.Do(ctx, req, repo)
 	if err != nil {
 		return nil, resp, err
@@ -204,7 +215,11 @@ type RepositoryListOptions struct {
 // with various filtering and sorting options. You can filter by repository
 // type (all, owner, member) and sort by creation date, update date, or
 // other criteria. The results are returned in pages.
-func (s *RepositoriesService) List(ctx context.Context, owner string, opts *RepositoryListOptions) ([]*Repository, *Response, error) {
+func (s *RepositoriesService) List(
+	ctx context.Context,
+	owner string,
+	opts *RepositoryListOptions,
+) ([]*Repository, *Response, error) {
 	path := fmt.Sprintf("users/%s/repos", owner)
 
 	if opts != nil {
@@ -213,12 +228,15 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Type != nil {
 			v.Set("type", *opts.Type)
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
+
 		if opts.Direction != nil {
 			v.Set("direction", *opts.Direction)
 		}
@@ -234,6 +252,7 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 	}
 
 	repos := new([]*Repository)
+
 	res, err := s.client.Do(ctx, req, repos)
 	if err != nil {
 		return nil, res, err
@@ -247,7 +266,12 @@ func (s *RepositoriesService) List(ctx context.Context, owner string, opts *Repo
 // repository. You can include anonymous contributors in the results and
 // the list is sorted by the number of contributions. The results are
 // returned in pages according to the pagination options.
-func (s *RepositoriesService) ListContributors(ctx context.Context, owner string, repo string, opts *RepositoryListOptions) ([]*User, *Response, error) {
+func (s *RepositoriesService) ListContributors(
+	ctx context.Context,
+	owner string,
+	repo string,
+	opts *RepositoryListOptions,
+) ([]*User, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/contributors", owner, repo)
 
 	if opts != nil {
@@ -256,6 +280,7 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Anon != nil {
 			v.Set("anon", *opts.Anon)
 		}
@@ -271,6 +296,7 @@ func (s *RepositoriesService) ListContributors(ctx context.Context, owner string
 	}
 
 	contributors := new([]*User)
+
 	res, err := s.client.Do(ctx, req, contributors)
 	if err != nil {
 		return nil, res, err

@@ -175,10 +175,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if c.rateLimitHandler != nil {
-			if err := c.rateLimitHandler(httpresp); err != nil {
+			err = c.rateLimitHandler(httpresp)
+			if err != nil {
 				return resp, err
 			}
 		}
+
 		_ = httpresp.Body.Close()
 
 		if attempt >= maxAtm-1 {
@@ -195,12 +197,13 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 	}
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= http.StatusBadRequest {
 		return resp, newAPIError(httpresp)
 	}
 
 	if v != nil {
-		if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
+		err = json.NewDecoder(resp.Body).Decode(v)
+		if err != nil {
 			return resp, err
 		}
 	}
@@ -235,7 +238,9 @@ func calcBackoff(minD time.Duration, maxD time.Duration, attempt int, resp *Resp
 		return time.Until(resetTime)
 	}
 
-	backoff := float64(minD) * math.Pow(2, float64(attempt))
+	const binBase = 2
+
+	backoff := float64(minD) * math.Pow(binBase, float64(attempt))
 	wait := time.Duration(backoff)
 
 	return min(wait, maxD)

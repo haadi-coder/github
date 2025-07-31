@@ -59,6 +59,7 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, issu
 	}
 
 	issue := new(Issue)
+
 	resp, err := s.client.Do(ctx, req, issue)
 	if err != nil {
 		return nil, resp, err
@@ -83,7 +84,12 @@ type IssueCreateRequest struct {
 // This method allows you to create a new issue with specified title, body,
 // assignees, labels, and other optional parameters. The created issue
 // will be owned by the specified repository owner and repository name.
-func (s *IssuesService) Create(ctx context.Context, owner string, repo string, body *IssueCreateRequest) (*Issue, *Response, error) {
+func (s *IssuesService) Create(
+	ctx context.Context,
+	owner string,
+	repo string,
+	body *IssueCreateRequest,
+) (*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues", owner, repo)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -92,6 +98,7 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, b
 	}
 
 	issue := new(Issue)
+	
 	resp, err := s.client.Do(ctx, req, issue)
 	if err != nil {
 		return nil, resp, err
@@ -118,7 +125,13 @@ type IssueUpdateRequest struct {
 // This method allows you to modify an existing issue by its number.
 // You can update the title, body, assignees, labels, state, and other
 // properties of the issue. Only provided fields will be updated.
-func (s *IssuesService) Update(ctx context.Context, owner string, repo string, issueNum int, body *IssueUpdateRequest) (*Issue, *Response, error) {
+func (s *IssuesService) Update(
+	ctx context.Context,
+	owner string,
+	repo string,
+	issueNum int,
+	body *IssueUpdateRequest,
+) (*Issue, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPatch, path, body)
@@ -127,6 +140,7 @@ func (s *IssuesService) Update(ctx context.Context, owner string, repo string, i
 	}
 
 	issue := new(Issue)
+
 	resp, err := s.client.Do(ctx, req, issue)
 	if err != nil {
 		return nil, resp, err
@@ -145,7 +159,13 @@ type IssueLockRequest struct {
 // This method prevents non-collaborators from commenting on the issue.
 // You can optionally specify a lock reason such as "off-topic", "too heated",
 // "resolved", or "spam" to provide context for why the issue was locked.
-func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, issueNum int, body *IssueLockRequest) (*Response, error) {
+func (s *IssuesService) Lock(
+	ctx context.Context,
+	owner string,
+	repo string,
+	issueNum int,
+	body *IssueLockRequest,
+) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPut, path, body)
@@ -166,6 +186,7 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, iss
 // (including non-collaborators) to comment on it again.
 func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, issueNum int) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/lock", owner, repo, issueNum)
+
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err
@@ -183,6 +204,7 @@ func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, i
 // GitHub API docs: https://docs.github.com/en/rest/issues/issues#list-repository-issues
 type IssueListOptions struct {
 	*ListOptions
+
 	State     *string
 	Assignee  *string
 	Type      *string
@@ -208,31 +230,40 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Assignee != nil {
 			v.Set("assignee", *opts.Assignee)
 		}
+
 		if opts.Creator != nil {
 			v.Set("creator", *opts.Creator)
 		}
+
 		if opts.Mentioned != nil {
 			v.Set("mentioned", *opts.Mentioned)
 		}
+
 		if opts.State != nil {
 			v.Set("state", *opts.State)
 		}
+
 		if opts.Type != nil {
 			v.Set("type", *opts.Type)
 		}
+
 		if len(opts.Labels) != 0 {
 			v.Set("labels", strings.Join(opts.Labels, ","))
 		}
+
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
 			v.Set("since", string(t))
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
+
 		if opts.Direction != nil {
 			v.Set("direction", *opts.Direction)
 		}
@@ -248,6 +279,7 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 	}
 
 	issues := new([]*Issue)
+
 	res, err := s.client.Do(ctx, req, issues)
 	if err != nil {
 		return nil, res, err
@@ -278,7 +310,13 @@ type IssueComment struct {
 // This method adds a new comment to the specified issue. The comment
 // will be authored by the authenticated user and will appear in the
 // issue's comment thread.
-func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo string, issueNum int, body IssueCommentRequest) (*IssueComment, *Response, error) {
+func (s *IssuesService) CreateComment(
+	ctx context.Context,
+	owner string,
+	repo string,
+	issueNum int,
+	body IssueCommentRequest,
+) (*IssueComment, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/%d/comments", owner, repo, issueNum)
 
 	req, err := s.client.NewRequest(http.MethodPost, path, body)
@@ -287,6 +325,7 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 	}
 
 	comment := new(IssueComment)
+
 	resp, err := s.client.Do(ctx, req, comment)
 	if err != nil {
 		return nil, resp, err
@@ -299,6 +338,7 @@ func (s *IssuesService) CreateComment(ctx context.Context, owner string, repo st
 // GitHub API docs: https://docs.github.com/en/rest/issues/comments#list-issue-comments
 type IssueCommentListOptions struct {
 	*ListOptions
+
 	Since     *Timestamp
 	Sort      *string
 	Direction *string
@@ -308,7 +348,12 @@ type IssueCommentListOptions struct {
 // This method retrieves all comments across all issues in the specified
 // repository. You can filter the results by creation date and sort them
 // according to your preferences. The results are returned in pages.
-func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, repo string, opts *IssueCommentListOptions) ([]*IssueComment, *Response, error) {
+func (s *IssuesService) ListCommentsByRepo(
+	ctx context.Context,
+	owner string,
+	repo string,
+	opts *IssueCommentListOptions,
+) ([]*IssueComment, *Response, error) {
 	path := fmt.Sprintf("repos/%s/%s/issues/comments", owner, repo)
 
 	if opts != nil {
@@ -317,13 +362,16 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Since != nil {
 			t, _ := opts.Since.MarshalJSON()
 			v.Set("since", string(t))
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
+
 		if opts.Direction != nil {
 			v.Set("direction", *opts.Direction)
 		}
@@ -339,6 +387,7 @@ func (s *IssuesService) ListCommentsByRepo(ctx context.Context, owner string, re
 	}
 
 	comments := new([]*IssueComment)
+
 	res, err := s.client.Do(ctx, req, comments)
 	if err != nil {
 		return nil, res, err

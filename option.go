@@ -15,6 +15,7 @@ type option func(*Client) error
 func WithToken(token string) option {
 	return func(c *Client) error {
 		c.token = token
+
 		return nil
 	}
 }
@@ -25,6 +26,7 @@ func WithToken(token string) option {
 func WithHTTPClient(client *http.Client) option {
 	return func(c *Client) error {
 		c.client = client
+
 		return nil
 	}
 }
@@ -38,7 +40,9 @@ func WithBaseURL(baseURL string) option {
 		if err != nil {
 			return fmt.Errorf("failed to parse base URL %s: %w", baseURL, err)
 		}
+		
 		c.baseURL = parsed
+
 		return nil
 	}
 }

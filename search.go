@@ -39,13 +39,16 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	path := "search/repositories"
 
 	v := url.Values{}
+
 	if opts != nil {
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Order != nil {
 			v.Set("order", *opts.Order)
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
@@ -67,6 +70,7 @@ func (s *SearchService) Repositories(ctx context.Context, sq string, opts *Searc
 	}
 
 	search := new(Search[Repository])
+	
 	resp, err := s.client.Do(ctx, req, search)
 	if err != nil {
 		return nil, resp, err
@@ -84,14 +88,16 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 	path := "search/users"
 
 	v := url.Values{}
-	if opts != nil {
 
+	if opts != nil {
 		if opts.ListOptions != nil {
 			opts.Apply(v)
 		}
+
 		if opts.Order != nil {
 			v.Set("order", *opts.Order)
 		}
+
 		if opts.Sort != nil {
 			v.Set("sort", *opts.Sort)
 		}
@@ -113,6 +119,7 @@ func (s *SearchService) Users(ctx context.Context, sq string, opts *SearchOption
 	}
 
 	search := new(Search[User])
+
 	resp, err := s.client.Do(ctx, req, search)
 	if err != nil {
 		return nil, resp, err
