@@ -75,12 +75,13 @@ func TestSearch_Repositories(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
-				
+
 				if tt.expectError {
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
@@ -173,9 +174,9 @@ func TestSearch_Users(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Parallel()
-		
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -190,6 +191,7 @@ func TestSearch_Users(t *testing.T) {
 
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))

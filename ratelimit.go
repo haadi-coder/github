@@ -21,7 +21,7 @@ type RateLimit struct {
 	Reset     int64 `json:"reset"`
 }
 
-// RateLimitResponse represents the complete rate limit information returned by the GitHub API
+// RateLimitResponse represents the complete rate limit information returned by the GitHub API.
 type RateLimitResponse struct {
 	Resources *RateLimitResources
 	Rate      *RateLimit

@@ -70,12 +70,14 @@ func TestIssuesService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -86,8 +88,8 @@ func TestIssuesService_Get(t *testing.T) {
 
 			issue, resp, err := client.Issues.Get(context.Background(), tt.owner, tt.repoName, tt.issueNum)
 			require.NoError(t, err)
-			require.NotNil(t, issue)
 
+			require.NotNil(t, issue)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
@@ -136,6 +138,7 @@ func TestIssuesService_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
@@ -150,6 +153,7 @@ func TestIssuesService_Create(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -160,8 +164,8 @@ func TestIssuesService_Create(t *testing.T) {
 
 			issue, resp, err := client.Issues.Create(context.Background(), tt.owner, tt.repoName, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, issue)
 
+			require.NotNil(t, issue)
 			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
@@ -210,6 +214,7 @@ func TestIssuesService_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
@@ -224,6 +229,7 @@ func TestIssuesService_Update(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -234,8 +240,8 @@ func TestIssuesService_Update(t *testing.T) {
 
 			issue, resp, err := client.Issues.Update(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, issue)
 
+			require.NotNil(t, issue)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, issue)
 		})
@@ -278,6 +284,7 @@ func TestIssuesService_LockUnlock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				
@@ -351,6 +358,7 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -368,9 +376,9 @@ func TestIssuesService_ListByRepo(t *testing.T) {
 
 			issues, _, err := client.Issues.ListByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
+
 			require.NotNil(t, issues)
 			assert.Len(t, issues, len(tt.expected))
-
 			assert.Equal(t, tt.expected, issues)
 		})
 	}
@@ -412,6 +420,7 @@ func TestIssuesService_CreateComment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
@@ -437,8 +446,8 @@ func TestIssuesService_CreateComment(t *testing.T) {
 
 			comment, resp, err := client.Issues.CreateComment(context.Background(), tt.owner, tt.repoName, tt.issueNum, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, comment)
 
+			require.NotNil(t, comment)
 			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, comment)
 		})
@@ -474,6 +483,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				url, _ := url.QueryUnescape(r.URL.String())
 				assert.Equal(t, tt.expectedURL, url)
@@ -481,6 +491,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -491,6 +502,7 @@ func TestIssuesService_ListCommentsByRepo(t *testing.T) {
 
 			comments, _, err := client.Issues.ListCommentsByRepo(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
+
 			require.NotNil(t, comments)
 			assert.Len(t, comments, len(tt.expected))
 			assert.Equal(t, tt.expected, comments)

@@ -73,6 +73,7 @@ func TestBuildResponseRateLimit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				for k, v := range tt.headers {
 					w.Header().Set(k, v)
@@ -88,7 +89,7 @@ func TestBuildResponseRateLimit(t *testing.T) {
 
 			response, _ := newResponse(resp)
 			_ = resp.Body.Close()
-			
+
 			assert.Equal(t, tt.expectedRateLimit, response.RateLimit)
 		})
 	}
@@ -108,6 +109,7 @@ func TestRateLimitService_Get(t *testing.T) {
             "rate": {"limit": 100, "remaining": 50, "used": 50, "reset": 1717029203}
         }`))
 	}))
+
 	defer ts.Close()
 
 	client, err := NewClient(WithBaseURL(ts.URL))
@@ -167,6 +169,7 @@ func TestCalcBackoff(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			result := calcBackoff(tt.waitMin, tt.waitMax, tt.attempt, &Response{RateLimit: &RateLimit{Reset: tt.reset}})
 			assert.InDelta(t, tt.expected, result, 0.5)
 		})

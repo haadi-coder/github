@@ -135,7 +135,7 @@ func (s *RepositoriesService) Update(
 // Note that this requires admin permissions on the repository.
 func (s *RepositoriesService) Delete(ctx context.Context, owner string, repo string) (*Response, error) {
 	path := fmt.Sprintf("repos/%s/%s", owner, repo)
-	
+
 	req, err := s.client.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
 		return nil, err

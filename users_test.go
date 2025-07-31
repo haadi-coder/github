@@ -38,6 +38,7 @@ func TestUsersService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
@@ -46,7 +47,6 @@ func TestUsersService_Get(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
-			
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -113,6 +113,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
@@ -179,6 +180,7 @@ func TestUsersService_List(t *testing.T) {
 				w.WriteHeader(tt.responseStatus)
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -243,7 +245,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 				assert.Equal(t, tt.path, r.URL.Path)
 				assert.Equal(t, tt.method, r.Method)
 				assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-
+				
 				if tt.token != "" {
 					assert.Equal(t, "Bearer "+tt.token, r.Header.Get("Authorization"))
 				}
@@ -253,8 +255,10 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
@@ -330,8 +334,10 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
@@ -400,9 +406,11 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 
 				if tt.responseStatus != http.StatusNoContent {
 					w.Header().Set("Content-Type", "application/json")
+					
 					_, _ = w.Write([]byte(`{"message":"Unauthorized"}`))
 				}
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))

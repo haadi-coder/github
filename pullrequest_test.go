@@ -55,12 +55,14 @@ func TestPullRequestsService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -71,8 +73,8 @@ func TestPullRequestsService_Get(t *testing.T) {
 
 			pr, resp, err := client.PullRequests.Get(context.Background(), tt.owner, tt.repoName, tt.pullNum)
 			require.NoError(t, err)
-			require.NotNil(t, pr)
 
+			require.NotNil(t, pr)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
@@ -124,6 +126,8 @@ func TestPullRequestsService_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
@@ -138,8 +142,10 @@ func TestPullRequestsService_Create(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -147,8 +153,8 @@ func TestPullRequestsService_Create(t *testing.T) {
 
 			pr, resp, err := client.PullRequests.Create(context.Background(), tt.owner, tt.repoName, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, pr)
 
+			require.NotNil(t, pr)
 			assert.Equal(t, http.StatusCreated, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
@@ -200,6 +206,8 @@ func TestPullRequestsService_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
@@ -209,13 +217,15 @@ func TestPullRequestsService_Update(t *testing.T) {
 
 				body, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(body, &reqBody)
-				
+
 				assert.Equal(t, *tt.body, reqBody)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -223,8 +233,8 @@ func TestPullRequestsService_Update(t *testing.T) {
 
 			pr, resp, err := client.PullRequests.Update(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, pr)
 
+			require.NotNil(t, pr)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, pr)
 		})
@@ -270,6 +280,8 @@ func TestPullRequestsService_Merge(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.Path)
 				assert.Equal(t, "PUT", r.Method)
@@ -284,8 +296,10 @@ func TestPullRequestsService_Merge(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -293,8 +307,8 @@ func TestPullRequestsService_Merge(t *testing.T) {
 
 			merge, resp, err := client.PullRequests.Merge(context.Background(), tt.owner, tt.repoName, tt.pullNum, tt.body)
 			require.NoError(t, err)
-			require.NotNil(t, merge)
 
+			require.NotNil(t, merge)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			assert.Equal(t, tt.expected, merge)
 		})
@@ -366,14 +380,18 @@ func TestPullRequestsService_List(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL))
@@ -381,9 +399,9 @@ func TestPullRequestsService_List(t *testing.T) {
 
 			prs, _, err := client.PullRequests.List(context.Background(), tt.owner, tt.repoName, tt.opts)
 			require.NoError(t, err)
+
 			require.NotNil(t, prs)
 			assert.Len(t, prs, len(tt.expected))
-
 			assert.Equal(t, tt.expected, prs)
 		})
 	}

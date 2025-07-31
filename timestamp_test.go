@@ -98,6 +98,7 @@ func TestTimestamp_UnmarshalJSON(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+			
 			var ts Timestamp
 
 			err := ts.UnmarshalJSON([]byte(tc.jsonData))

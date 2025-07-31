@@ -110,11 +110,13 @@ func TestParseLinkHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			resp := &Response{
 				Response: &http.Response{
 					Header: make(http.Header),
 				},
 			}
+
 			if tt.linkHeader != "" {
 				resp.Header.Set("Link", tt.linkHeader)
 			}
@@ -246,8 +248,9 @@ func TestBuildErrorResponse(t *testing.T) {
 			err := newAPIError(resp)
 
 			if !tt.expectedErrIsNil {
-				assert.Error(t, err)
 				e := err.(*APIError)
+
+				assert.Error(t, err)
 				assert.Equal(t, tt.expectedMsg, e.Message)
 				assert.Equal(t, tt.expectedDocURL, e.DocumentationURL)
 
@@ -272,8 +275,10 @@ func TestDo_Success(t *testing.T) {
 		w.Header().Set("X-RateLimit-Reset", "1717029203")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+
 		_ = json.NewEncoder(w).Encode(map[string]string{"key": "value"})
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient(WithBaseURL(ts.URL))
@@ -282,13 +287,12 @@ func TestDo_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	resp, err := client.Do(context.Background(), req, &map[string]string{})
-
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	result := &map[string]string{}
 	_ = json.NewDecoder(resp.Body).Decode(result)
 
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, 60, resp.Limit)
 	assert.Equal(t, 59, resp.Remaining)
 	assert.Equal(t, 1, resp.Used)
@@ -302,8 +306,10 @@ func TestDo_RateLimitExceeded_NoRetry(t *testing.T) {
 		w.Header().Set("X-RateLimit-Used", "1")
 		w.Header().Set("X-RateLimit-Reset", "1717029203")
 		w.Header().Set("Content-Type", "application/json")
+
 		http.Error(w, `{"message": "Too Many Requests"}`, http.StatusTooManyRequests)
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient()
@@ -327,6 +333,7 @@ func TestDo_ContextTimeout(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "should not be called", http.StatusInternalServerError)
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient()
@@ -348,9 +355,11 @@ func TestDo_ContextTimeout(t *testing.T) {
 func TestDo_LinkHeaderParsing(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		link := `<https://api.github.com/resource?page=2>; rel="next", <https://api.github.com/resource?page=1>; rel="prev"`
+
 		w.Header().Set("Link", link)
 		w.WriteHeader(http.StatusOK)
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient()
@@ -359,8 +368,7 @@ func TestDo_LinkHeaderParsing(t *testing.T) {
 	req, err := client.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)
 
-	ctx := context.Background()
-	resp, err := client.Do(ctx, req, nil)
+	resp, err := client.Do(context.Background(), req, nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, 2, resp.NextPage)
@@ -371,6 +379,7 @@ func TestDo_HooksCalled(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient()
@@ -379,8 +388,7 @@ func TestDo_HooksCalled(t *testing.T) {
 	req, err := client.NewRequest("GET", ts.URL, nil)
 	require.NoError(t, err)
 
-	ctx := context.Background()
-	resp, err := client.Do(ctx, req, nil)
+	resp, err := client.Do(context.Background(), req, nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -410,8 +418,10 @@ func TestDo_RetryOnRateLimit(t *testing.T) {
 func TestDo_InvalidJSON(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		
 		_, _ = w.Write([]byte("invalid json"))
 	}))
+
 	defer ts.Close()
 
 	client, _ := NewClient(WithBaseURL(ts.URL))

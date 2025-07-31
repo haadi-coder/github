@@ -153,7 +153,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		httpresp, err = c.client.Do(req)
-		if err != nil {
+		if err != nil { 
 			return nil, err
 		}
 

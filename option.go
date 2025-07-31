@@ -40,7 +40,7 @@ func WithBaseURL(baseURL string) option {
 		if err != nil {
 			return fmt.Errorf("failed to parse base URL %s: %w", baseURL, err)
 		}
-		
+
 		c.baseURL = parsed
 
 		return nil
@@ -53,6 +53,7 @@ func WithBaseURL(baseURL string) option {
 func WithUserAgent(agent string) option {
 	return func(c *Client) error {
 		c.userAgent = agent
+
 		return nil
 	}
 }
@@ -63,6 +64,7 @@ func WithUserAgent(agent string) option {
 func WithRateLimitRetry(retry bool) option {
 	return func(c *Client) error {
 		c.rateLimitRetry = retry
+
 		return nil
 	}
 }
@@ -73,6 +75,7 @@ func WithRateLimitRetry(retry bool) option {
 func WithRateLimitHandler(handler func(*http.Response) error) option {
 	return func(c *Client) error {
 		c.rateLimitHandler = handler
+
 		return nil
 	}
 }
@@ -83,6 +86,7 @@ func WithRateLimitHandler(handler func(*http.Response) error) option {
 func WithRetryMax(retryCount int) option {
 	return func(c *Client) error {
 		c.retryMax = retryCount
+
 		return nil
 	}
 }
@@ -93,6 +97,7 @@ func WithRetryMax(retryCount int) option {
 func WithRetryWaitMin(wait time.Duration) option {
 	return func(c *Client) error {
 		c.retryWaitMin = wait
+
 		return nil
 	}
 }
@@ -103,6 +108,7 @@ func WithRetryWaitMin(wait time.Duration) option {
 func WithRetryWaitMax(wait time.Duration) option {
 	return func(c *Client) error {
 		c.retryWaitMax = wait
+
 		return nil
 	}
 }
@@ -113,6 +119,7 @@ func WithRetryWaitMax(wait time.Duration) option {
 func WithRequestHook(hook func(*http.Request)) option {
 	return func(c *Client) error {
 		c.requestHook = hook
+
 		return nil
 	}
 }
@@ -123,6 +130,7 @@ func WithRequestHook(hook func(*http.Request)) option {
 func WithResponseHook(hook func(*Response)) option {
 	return func(c *Client) error {
 		c.responseHook = hook
+		
 		return nil
 	}
 }

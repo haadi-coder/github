@@ -98,6 +98,7 @@ func TestRepositoriesService_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "GET", r.Method)
@@ -105,9 +106,10 @@ func TestRepositoriesService_Get(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
-			
+
 			defer ts.Close()
 
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken("test-token"))
@@ -174,6 +176,7 @@ func TestRepositoriesService_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/user/repos", r.URL.Path)
 				assert.Equal(t, "POST", r.Method)
@@ -188,6 +191,7 @@ func TestRepositoriesService_Create(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -259,6 +263,7 @@ func TestRepositoriesService_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "PATCH", r.Method)
@@ -274,6 +279,7 @@ func TestRepositoriesService_Update(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -324,6 +330,7 @@ func TestRepositoriesService_Delete(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/repos/"+tt.owner+"/"+tt.repoName, r.URL.Path)
 				assert.Equal(t, "DELETE", r.Method)
@@ -333,6 +340,7 @@ func TestRepositoriesService_Delete(t *testing.T) {
 
 				if tt.responseStatus != http.StatusNoContent {
 					w.Header().Set("Content-Type", "application/json")
+
 					_, _ = w.Write([]byte(`{"message":"Not Found"}`))
 				}
 			}))
@@ -400,6 +408,7 @@ func TestRepositoriesService_List(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -407,6 +416,7 @@ func TestRepositoriesService_List(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
@@ -477,6 +487,7 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, tt.expectedURL, r.URL.String())
 				assert.Equal(t, "GET", r.Method)
@@ -484,6 +495,7 @@ func TestRepositoriesService_ListContributors(t *testing.T) {
 
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.responseStatus)
+				
 				_, _ = w.Write([]byte(tt.responseBody))
 			}))
 
