@@ -142,12 +142,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 	maxAtm := max(c.retryMax, 1)
 	for attempt := range maxAtm {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
 		if c.requestHook != nil {
 			c.requestHook(req)
 		}
@@ -171,13 +165,13 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if !c.rateLimitRetry {
-			return resp, newAPIError(httpresp)
+			break
 		}
 
 		if c.rateLimitHandler != nil {
 			err = c.rateLimitHandler(httpresp)
 			if err != nil {
-				break
+				return resp, err
 			}
 		}
 
@@ -193,7 +187,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			return resp, ctx.Err()
 		case <-time.After(wait):
 			continue
-		default:
 		}
 	}
 
