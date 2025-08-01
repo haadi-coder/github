@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	defaultBaseURL  = "https://api.github.com"
-	defaultWaitMin  = time.Second
-	defaultWaitMax  = 60 * time.Second
-	defaultRetryMax = 5
+	defaultBaseURL      = "https://api.github.com"
+	defaultRetryWaitMin = time.Second
+	defaultRetryWaitMax = 60 * time.Second
+	defaultRetryMax     = 5
 
 	userAgent = "go-github"
 )
@@ -41,7 +41,7 @@ type Client struct {
 	responseHook     func(*Response)
 
 	// User service for user-related operations
-	User *UsersService
+	Users *UsersService
 
 	// Repositories service for repository-related operations
 	Repositories *RepositoriesService
@@ -70,8 +70,8 @@ func NewClient(opts ...option) (*Client, error) {
 		baseURL:      baseURL,
 		userAgent:    userAgent,
 		retryMax:     defaultRetryMax,
-		retryWaitMin: defaultWaitMin,
-		retryWaitMax: defaultWaitMax,
+		retryWaitMin: defaultRetryWaitMin,
+		retryWaitMax: defaultRetryWaitMax,
 	}
 
 	for _, opt := range opts {
@@ -80,7 +80,7 @@ func NewClient(opts ...option) (*Client, error) {
 		}
 	}
 
-	client.User = &UsersService{client}
+	client.Users = &UsersService{client}
 	client.Repositories = &RepositoriesService{client}
 	client.Issues = &IssuesService{client}
 	client.PullRequests = &PullRequestsService{client}
@@ -153,7 +153,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		httpresp, err = c.client.Do(req)
-		if err != nil { 
+		if err != nil {
 			return nil, err
 		}
 
@@ -177,7 +177,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		if c.rateLimitHandler != nil {
 			err = c.rateLimitHandler(httpresp)
 			if err != nil {
-				return resp, err
+				break
 			}
 		}
 
@@ -187,18 +187,22 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 			return resp, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
 		}
 
-		waitTime := calcBackoff(c.retryWaitMin, c.retryWaitMax, attempt, resp)
+		wait := calcBackoff(c.retryWaitMin, c.retryWaitMax, attempt, resp)
 		select {
 		case <-ctx.Done():
 			return resp, ctx.Err()
-		case <-time.After(waitTime):
+		case <-time.After(wait):
 			continue
 		default:
 		}
 	}
 
-	if resp.StatusCode >= http.StatusBadRequest {
+	if resp.StatusCode >= 400 {
 		return resp, newAPIError(httpresp)
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		return resp, nil
 	}
 
 	if v != nil {
@@ -213,22 +217,23 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	return resp, nil
 }
 
+var serviceShuttedCodes = []int{
+	http.StatusForbidden,
+	http.StatusTooManyRequests,
+}
+
+var serviceUnavailableCodes = []int{
+	http.StatusInternalServerError,
+	http.StatusBadGateway,
+	http.StatusServiceUnavailable,
+}
+
 func checkRetry(resp *Response) bool {
-	serviceShutted := []int{
-		http.StatusForbidden,
-		http.StatusTooManyRequests,
-	}
-	if slices.Contains(serviceShutted, resp.StatusCode) && resp.Remaining == 0 {
+	if slices.Contains(serviceShuttedCodes, resp.StatusCode) && resp.Remaining == 0 {
 		return true
 	}
 
-	serviceUnavailable := []int{
-		http.StatusInternalServerError,
-		http.StatusBadGateway,
-		http.StatusServiceUnavailable,
-	}
-
-	return slices.Contains(serviceUnavailable, resp.StatusCode)
+	return slices.Contains(serviceUnavailableCodes, resp.StatusCode)
 }
 
 func calcBackoff(minD time.Duration, maxD time.Duration, attempt int, resp *Response) time.Duration {

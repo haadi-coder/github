@@ -52,7 +52,7 @@ func TestUsersService_Get(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			user, resp, err := client.User.Get(context.Background(), "testuser")
+			user, resp, err := client.Users.Get(context.Background(), "testuser")
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
@@ -119,7 +119,7 @@ func TestUsersService_GetAuthenticated(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
 			require.NoError(t, err)
 
-			user, resp, err := client.User.GetAuthenticated(context.Background())
+			user, resp, err := client.Users.GetAuthenticated(context.Background())
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
@@ -186,7 +186,7 @@ func TestUsersService_List(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL))
 			require.NoError(t, err)
 
-			userList, resp, err := client.User.List(context.Background(), tt.opts)
+			userList, resp, err := client.Users.List(context.Background(), tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
 
@@ -268,7 +268,7 @@ func TestUsersService_UpdateAuthenticated(t *testing.T) {
 
 			_ = json.Unmarshal([]byte(tt.requestBody), &body)
 
-			user, resp, err := client.User.UpdateAuthenticated(context.Background(), body)
+			user, resp, err := client.Users.UpdateAuthenticated(context.Background(), body)
 			if tt.expected != nil {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expected, user)
@@ -343,7 +343,7 @@ func TestUsersService_ListAuthenticatedUserFollowers(t *testing.T) {
 			client, err := NewClient(WithBaseURL(ts.URL), WithToken(tt.token))
 			require.NoError(t, err)
 
-			followers, resp, err := client.User.ListAuthenticatedUserFollowers(context.Background(), tt.opts)
+			followers, resp, err := client.Users.ListAuthenticatedUserFollowers(context.Background(), tt.opts)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
 			if len(tt.expected) > 0 {
@@ -417,9 +417,9 @@ func TestUsersService_FollowUnfollow(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.isFollow {
-				_, err = client.User.Follow(context.Background(), "testuser")
+				_, err = client.Users.Follow(context.Background(), "testuser")
 			} else {
-				_, err = client.User.Unfollow(context.Background(), "testuser")
+				_, err = client.Users.Unfollow(context.Background(), "testuser")
 			}
 
 			if tt.responseStatus == http.StatusNoContent {
