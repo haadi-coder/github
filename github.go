@@ -153,6 +153,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 		resp, err = newResponse(httpresp)
 		if err != nil {
+			_ = httpresp.Body.Close()
 			return resp, err
 		}
 
@@ -165,12 +166,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if !c.rateLimitRetry {
+			_ = httpresp.Body.Close()
 			break
 		}
 
 		if c.rateLimitHandler != nil {
 			err = c.rateLimitHandler(httpresp)
 			if err != nil {
+				_ = httpresp.Body.Close()
 				return resp, err
 			}
 		}
@@ -191,16 +194,19 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	}
 
 	if resp.StatusCode >= 400 {
+		_ = httpresp.Body.Close()
 		return resp, newAPIError(httpresp)
 	}
 
 	if resp.StatusCode == http.StatusNoContent {
+		_ = httpresp.Body.Close()
 		return resp, nil
 	}
 
 	if v != nil {
 		err = json.NewDecoder(resp.Body).Decode(v)
 		if err != nil {
+			_ = httpresp.Body.Close()
 			return resp, err
 		}
 	}
