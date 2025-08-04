@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -348,7 +349,7 @@ func TestDo_ContextTimeout(t *testing.T) {
 	resp, err := client.Do(ctx, req, nil)
 
 	require.Error(t, err)
-	assert.Equal(t, context.Canceled, err)
+	assert.True(t, errors.Is(err, context.Canceled))
 	assert.Nil(t, resp)
 }
 
@@ -418,7 +419,7 @@ func TestDo_RetryOnRateLimit(t *testing.T) {
 func TestDo_InvalidJSON(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		
+
 		_, _ = w.Write([]byte("invalid json"))
 	}))
 

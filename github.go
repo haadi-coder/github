@@ -198,12 +198,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		return resp, newAPIError(httpresp)
 	}
 
-	if resp.StatusCode == http.StatusNoContent {
-		_ = httpresp.Body.Close()
-		return resp, nil
-	}
-
-	if v != nil {
+	if v != nil && resp.StatusCode != http.StatusNoContent {
 		err = json.NewDecoder(resp.Body).Decode(v)
 		if err != nil {
 			_ = httpresp.Body.Close()
@@ -242,9 +237,7 @@ func calcBackoff(minD time.Duration, maxD time.Duration, attempt int, resp *Resp
 		return time.Until(resetTime)
 	}
 
-	const binBase = 2
-
-	backoff := float64(minD) * math.Pow(binBase, float64(attempt))
+	backoff := float64(minD) * math.Pow(2, float64(attempt))
 	wait := time.Duration(backoff)
 
 	return min(wait, maxD)
