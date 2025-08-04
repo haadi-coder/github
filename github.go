@@ -153,7 +153,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 		resp, err = newResponse(httpresp)
 		if err != nil {
-			_ = httpresp.Body.Close()
+			_ = resp.Body.Close()
 			return resp, err
 		}
 
@@ -166,19 +166,19 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 		}
 
 		if !c.rateLimitRetry {
-			_ = httpresp.Body.Close()
+			_ = resp.Body.Close()
 			break
 		}
 
 		if c.rateLimitHandler != nil {
 			err = c.rateLimitHandler(httpresp)
 			if err != nil {
-				_ = httpresp.Body.Close()
+				_ = resp.Body.Close()
 				return resp, err
 			}
 		}
 
-		_ = httpresp.Body.Close()
+		_ = resp.Body.Close()
 
 		if attempt >= maxAtm-1 {
 			return resp, fmt.Errorf("max retry attempts %d exceeded", maxAtm)
@@ -194,14 +194,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 	}
 
 	if resp.StatusCode >= 400 {
-		_ = httpresp.Body.Close()
+		_ = resp.Body.Close()
 		return resp, newAPIError(httpresp)
 	}
 
 	if v != nil && resp.StatusCode != http.StatusNoContent {
 		err = json.NewDecoder(resp.Body).Decode(v)
 		if err != nil {
-			_ = httpresp.Body.Close()
+			_ = resp.Body.Close()
 			return resp, err
 		}
 	}
