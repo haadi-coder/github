@@ -58,7 +58,7 @@ func (s *PullRequestsService) Get(
 	}
 
 	pr := new(PullRequest)
-	
+
 	resp, err := s.client.Do(ctx, req, pr)
 	if err != nil {
 		return nil, resp, err
@@ -70,14 +70,14 @@ func (s *PullRequestsService) Get(
 // PullRequestCreateRequest represents the request body for creating a pull request.
 // GitHub API docs: https://docs.github.com/en/rest/pulls/pulls#create-a-pull-request
 type PullRequestCreateRequest struct {
-	Head               string `json:"head"`
-	Base               string `json:"base"`
-	Title              string `json:"title,omitempty"`
-	HeadRepo           string `json:"head_repo,omitempty"`
-	Body               string `json:"body,omitempty"`
-	MantainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
-	Draft              bool   `json:"draft,omitempty"`
-	Issue              int    `json:"issue,omitempty"`
+	Head                string `json:"head"`
+	Base                string `json:"base"`
+	Title               string `json:"title,omitempty"`
+	HeadRepo            string `json:"head_repo,omitempty"`
+	Body                string `json:"body,omitempty"`
+	MaintainerCanModify bool   `json:"maintainer_can_modify,omitempty"`
+	Draft               bool   `json:"draft,omitempty"`
+	Issue               int    `json:"issue,omitempty"`
 }
 
 // Create creates a new pull request in a repository.

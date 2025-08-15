@@ -153,7 +153,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, e
 
 		resp, err = newResponse(httpresp)
 		if err != nil {
-			_ = resp.Body.Close()
+			_ = httpresp.Body.Close()
 			return resp, err
 		}
 
